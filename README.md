@@ -65,8 +65,8 @@ conda install ffmpeg -c conda-forge
 First, clone the repository and navigate into the directory:
 
 ```bash
-git clone https://github.com/huggingface/lerobot.git
-cd lerobot
+git clone https://github.com/Minko82/xle-robot.git
+cd xle-robot
 ```
 
 Then, install the library in editable mode. This is useful if you plan to contribute to the code.
@@ -137,8 +137,7 @@ lerobot-calibrate \
 ```bash
 lerobot-calibrate \
     --teleop.type=so101_leader \
-    --teleop.port=/dev/tty.usbmodem5A680135181 \
-    --teleop.id=xlerobot_left_arm
+    --teleop.port=/dev/tty.usbmodem5A680135181 
 ```
 
 ---
