@@ -103,7 +103,21 @@ conda activate lerobot
 
 ---
 
-### 5. Finding Your Robot Ports
+### 5. Powering and Connecting the Hardware
+
+Before running any calibration or communication commands, make sure the control boards and power supply are connected in the correct sequence:
+
+1. Turn on the battery.
+
+2. Connect the control boards to the battery and confirm that their indicator lights turn on.
+
+3. Connect the control boards to your laptop via USB.
+
+***⚠️ Important:*** Connecting in a different order may cause communication issues or prevent the boards from being recognized properly.
+
+---
+
+### 6. Finding Your Robot Ports
 
 Use the built-in command to locate your connected robot devices:
 
@@ -120,7 +134,7 @@ left  /dev/tty.usbmodem5A680135181
 
 ---
 
-### 6. Calibrating the Robot (Run Once)
+### 7. Calibrating the Robot (Run Once)
 
 You need to calibrate your robot only **once per device**.
 
