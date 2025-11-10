@@ -105,15 +105,7 @@ conda activate lerobot
 
 ### 5. Powering and Connecting the Hardware
 
-Before running any calibration or communication commands, make sure the control boards and power supply are connected in the correct sequence:
-
-1. Turn on the battery.
-
-2. Connect the control boards to the battery and confirm that their indicator lights turn on.
-
-3. Connect the control boards to your laptop via USB.
-
-***⚠️ Important:*** Connecting in a different order may cause communication issues or prevent the boards from being recognized properly.
+***⚠️ Important:*** If motors become unresponsive after a failure, unplug and reconnect their motor power cables to reset them.
 
 ---
 
