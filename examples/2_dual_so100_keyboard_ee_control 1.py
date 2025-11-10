@@ -459,15 +459,38 @@ def main():
         from lerobot.teleoperators.keyboard import KeyboardTeleop, KeyboardTeleopConfig
         
         # Configure dual-arm robots
-        arm1_port = "/dev/ttyACM0"
-        arm2_port = "/dev/ttyACM1"
+        arm1_port = "/dev/xle_right"
+        arm2_port = "/dev/xle_left"
         
-        print(f"Configuring first arm: {arm1_port}")  
-        print(f"Configuring second arm: {arm2_port}")
+	# Get robot names for calibration
+        arm1_name = input("Please enter the name for the right arm [default: right_arm]: ").strip()
+        if not arm1_name:
+            arm1_name = "right_arm"
+            print(f"Using default name for Arm 1: {arm1_name}")
+            
+        arm2_name = input("Please enter the name for the left arm [default: left_arm]: ").strip()
+        if not arm2_name:
+            arm2_name = "left_arm"
+            print(f"Using default name for Arm 2: {arm2_name}")
+            
+        # --- ADDED NOTICE ---
+        print("-" * 60)
+        print("IMPORTANT NOTICE:")
+        print(f"This script will use '{arm1_name}' and '{arm2_name}' as robot IDs.")
+        print(f"LeRobot will automatically try to load calibration files named:")
+        print(f"  '{arm1_name}.json'")
+        print(f"  '{arm2_name}.json'")
+        print("from its default calibration directory.")
+        print("Make sure these files exist and are correct before proceeding.")
+        print("-" * 60)
+        # --- END ADDED NOTICE ---
+            
+        print(f"Configuring Arm 1 ({arm1_name}) on port: {arm1_port}")  
+        print(f"Configuring Arm 2 ({arm2_name}) on port: {arm2_port}")
         
         # Create dual-arm robot instances
-        arm1_config = SO100FollowerConfig(port=arm1_port)
-        arm2_config = SO100FollowerConfig(port=arm2_port)
+        arm1_config = SO100FollowerConfig(port=arm1_port, id=arm1_name)
+        arm2_config = SO100FollowerConfig(port=arm2_port, id=arm2_name)
         
         arm1_robot = SO100Follower(arm1_config)
         arm2_robot = SO100Follower(arm2_config)

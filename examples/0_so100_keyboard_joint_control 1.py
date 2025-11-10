@@ -278,7 +278,7 @@ def main():
         from lerobot.teleoperators.keyboard import KeyboardTeleop, KeyboardTeleopConfig
         
         # Get port
-        port = input("Please enter SO100 robot USB port (e.g.: /dev/ttyACM0): ").strip()
+        port = input("Please enter SO100 robot USB port (e.g.: /dev/ttyACM0, /dev/xle_right, /dev/xle_left): ").strip()
         
         # If directly press enter, use default port
         if not port:
@@ -287,8 +287,13 @@ def main():
         else:
             print(f"Connecting to port: {port}")
         
+        robot_name = input("Please enter the robot name (e.g., 'right_arm' to load 'right_arm.json') [default: right_arm]: ").strip()
+        if not robot_name:
+            robot_name = "right_arm"
+            print(f"Using default name: {robot_name}")
+        
         # Configure robot
-        robot_config = SO100FollowerConfig(port=port)
+        robot_config = SO100FollowerConfig(port=port, id=robot_name)
         robot = SO100Follower(robot_config)
         
         # Configure keyboard
