@@ -14,53 +14,42 @@ If you prefer to follow the original instructions, see:
 🔗 [LeRobot Installation Docs](https://huggingface.co/docs/lerobot/installation)
 🔗 [XLeRobot Installation Docs](https://xlerobot.readthedocs.io/en/latest/software/getting_started/install.html)
 
+<br>
 
-### 1. Installing Conda
+---
 
-**For Mac:**
+### 1. Install Conda
 
+**Mac:**
 ```bash
 curl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
 bash Miniconda3-latest-MacOSX-arm64.sh
 ```
 
-**For Linux:**
-
+**Linux:**
 ```bash
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 bash ~/miniconda.sh
 ```
 
-After installation, **open a new terminal**.
+Then **open a new terminal**.
 
 <br>
 
 ---
 
-### 2. Environment Setup
+### 2. Create the Environment
 
-Clone this repository:
 ```bash
 wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 bash Miniforge3-$(uname)-$(uname -m).sh
-```
-Create a virtual environment with Python 3.10, using conda:
 
-```bash
 conda create -y -n lerobot python=3.10
-```
-
-Then activate your conda environment, you have to do this each time you open a shell to use lerobot:
-
-```bash
 conda activate lerobot
-```
-
-When using conda, install `ffmpeg` in your environment:
-
-```bash
 conda install ffmpeg -c conda-forge
 ```
+
+✅ **Tip:** Run `conda activate lerobot` every time you open a new terminal.
 
 <br>
 
@@ -68,30 +57,17 @@ conda install ffmpeg -c conda-forge
 
 ### 3. Install the XLe Robot
 
-First, clone the repository and navigate into the directory:
-
 ```bash
 git clone https://github.com/Minko82/xle-robot.git
 cd xle-robot
-```
-
-Then, install the library in editable mode. This is useful if you plan to contribute to the code.
-
-```bash
 pip install -e .
-```
-
-Install these extra features: 
-```bash
-pip install 'lerobot[all]'   
+pip install 'lerobot[all]'
 pip install -e ".[feetech]"
 ```
 
+#### If you see build errors (Linux only): 
 
-
-### Troubleshooting: 
-
-If you encounter build errors, you may need to install additional dependencies: cmake, build-essential, and ffmpeg libs. To install these for linux run:
+If you encounter build errors, you may need to install additional dependencies. To install these for linux run:
 
 ```bash
 sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config
@@ -100,7 +76,112 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 <br>
 
 ---
+### 4 — Arm Setup (Device Rules & Calibration)
 
+We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_right` and `/dev/xle_left`).
+
+1. **Plug in only the right arm’s control board**, then run:
+   ```bash
+   udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}'
+   ```
+   Example output:
+   ```
+   ATTRS{serial}=="A50285B1"
+   ```
+   Copy that serial number.
+
+2. **Unplug the right arm, plug in the left arm**, and repeat to get its serial.
+
+3. **Create a new rules file:**
+   ```bash
+   sudo nano /etc/udev/rules.d/99-so100-robot.rules
+   ```
+
+   Paste this (replace serials with yours):
+   ```
+   # Right Arm
+   SUBSYSTEM=="tty", ATTRS{serial}=="YOUR_SERIAL_FOR_ARM_1", SYMLINK+="xle_right"
+
+   # Left Arm
+   SUBSYSTEM=="tty", ATTRS{serial}=="YOUR_SERIAL_FOR_ARM_2", SYMLINK+="xle_left"
+   ```
+
+4. **Apply the rules:**
+   ```bash
+   sudo udevadm control --reload-rules
+   sudo udevadm trigger
+   ```
+
+5. **Copy calibration files:**
+   ```bash
+   cp left_arm.json right_arm.json ~/.cache/huggingface/lerobot/calibration/robots/
+   ```
+
+<br>
+
+---
+
+<details>
+<summary><b>📸 Wrist Cameras Setup (click to expand)</b></summary>
+
+<br>
+
+### Setup Overview
+
+1. **Find Camera Indices**
+   ```bash
+   v4l2-ctl --list-devices
+   ```
+   Example output:
+   ```
+   USB Camera (usb-0000:00:1a.0-1.2):
+       /dev/video0
+       /dev/video1
+   ```
+   The numbers (0, 1, etc.) are your camera indices.
+
+2. **Install OpenCV**
+   ```bash
+   pip install opencv-python
+   ```
+
+3. **Update Example Script**
+   Edit `examples/9_dual_wrist_camera.py` and set:
+   ```python
+   CAMERA_INDEX_1 = 0
+   CAMERA_INDEX_2 = 1
+   ```
+   to match your detected camera indices.
+
+</details>
+
+---
+
+<details>
+<summary><b>🟦 RealSense Camera Setup (click to expand)</b></summary>
+
+<br>
+
+### Step 1 — Install the SDK
+```bash
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
+sudo apt-get install librealsense2-dkms librealsense2-utils librealsense2-dev
+```
+
+### Step 2 — Install the Python Package
+```bash
+pip install pyrealsense2
+```
+
+### Step 3 — Verify the Camera
+```bash
+realsense-viewer
+```
+✅ You should see both **color** and **depth** video streams.  
+If not, check your USB connection or reinstall the SDK.
+
+</details>
 ### 4. Activating the Environment
 
 ***⚠️ Important:*** Every time you start the project, activate your environment!!!
