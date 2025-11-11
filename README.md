@@ -4,6 +4,8 @@
 **XLeRobot** is a customized version of [🤗 LeRobot](https://github.com/huggingface/lerobot) tailored for easier setup and use on both Mac and Linux systems.
 It provides additional setup guidance, calibration steps, and practical improvements for getting your robot up and running quickly.
 
+<br>
+
 ---
 
 ## 🚀 Installation & Setup
@@ -31,6 +33,8 @@ bash ~/miniconda.sh
 
 After installation, **open a new terminal**.
 
+<br>
+
 ---
 
 ### 2. Environment Setup
@@ -57,6 +61,8 @@ When using conda, install `ffmpeg` in your environment:
 ```bash
 conda install ffmpeg -c conda-forge
 ```
+
+<br>
 
 ---
 
@@ -91,21 +97,27 @@ If you encounter build errors, you may need to install additional dependencies: 
 sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config
 ```
 
+<br>
+
 ---
 
 ### 4. Activating the Environment
 
-**Every time you start the project, activate your environment!!!**
+***⚠️ Important:*** Every time you start the project, activate your environment!!!
 
 ```bash
 conda activate lerobot
 ```
+
+<br>
 
 ---
 
 ### 5. Powering and Connecting the Hardware
 
 ***⚠️ Important:*** If motors become unresponsive after a failure, unplug and reconnect their motor power cables to reset them.
+
+<br>
 
 ---
 
@@ -123,6 +135,8 @@ Example output:
 right /dev/tty.usbmodem5A680127941
 left  /dev/tty.usbmodem5A680135181
 ```
+
+<br>
 
 ---
 
@@ -147,7 +161,9 @@ lerobot-calibrate \
 ```
 
 
-Move the generated files to ___.
+***⚠️ Important:*** Move the generated files to ___.
+
+<br>
 
 ---
 
@@ -156,25 +172,25 @@ Move the generated files to ___.
 Navigate to the example folder and run a script:
 ```bash
 cd examples
-python3 0_so100_keyboard_joint_control.py
+python3 0_so100_keyboard_joint_control 1.py
 ```
 
 Compatible example scripts are available in the `examples` folder. Additional scripts can be found in `examples/provided_examples`, but these have not yet been tested for full compatibility with XLeRobot.
 
 <br>
 
+---
+
 ## 💡 Credits
 
 This project builds on top of [🤗 LeRobot](https://github.com/huggingface/lerobot) by Hugging Face Robotics and [XLeRobot](https://github.com/Vector-Wangel/XLeRobot).
+
+Additional development, hardware integration, and testing have been contributed by [@Minko82](https://github.com/Minko82) and [@nanasci](https://github.com/nanasci).
+
+<br>
 
 ---
 
 ## 📜 License
 
 Apache License 2.0 — see the [LICENSE](./LICENSE) file for details.
-
----
-
-<p align="center">
-  <sub>© 2025 XLeRobot | Built on 🤗 LeRobot</sub>
-</p>
