@@ -232,9 +232,6 @@ lerobot-calibrate     --robot.type=so101_follower     --robot.port=/dev/xle_righ
 lerobot-calibrate     --teleop.type=so101_leader     --teleop.port=/dev/xle_left
 ```
 
-
-***⚠️ Important:*** Move the generated files to ___.
-
 <br>
 
 ---
