@@ -95,7 +95,7 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 
 ### 4. Activating the Environment
 
-Every time you start the project, activate your environment:
+Every time you start the project, activate your environment!!!
 
 ```bash
 conda activate lerobot
@@ -146,12 +146,24 @@ lerobot-calibrate \
     --teleop.port=/dev/tty.usbmodem5A680135181 
 ```
 
+
+Move the generated files to ___.
+
 ---
+
+### 8. Run example code
+
+Navigate to the example folder and run a script:
+```bash
+cd examples
+python3 0_so100_keyboard_joint_control 1.py
+```
+
+Compatible example scripts are available in the `examples` folder. Additional scripts can be found in `examples/provided_examples`, but these have not yet been tested for full compatibility with XLeRobot.
 
 ## 💡 Credits
 
 This project builds on top of [🤗 LeRobot](https://github.com/huggingface/lerobot) by Hugging Face Robotics and [XLeRobot](https://github.com/Vector-Wangel/XLeRobot).
-All core functionality, datasets, and models remain attributed to the original authors.
 
 ---
 
