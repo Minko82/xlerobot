@@ -156,10 +156,12 @@ Move the generated files to ___.
 Navigate to the example folder and run a script:
 ```bash
 cd examples
-python3 0_so100_keyboard_joint_control 1.py
+python3 0_so100_keyboard_joint_control.py
 ```
 
 Compatible example scripts are available in the `examples` folder. Additional scripts can be found in `examples/provided_examples`, but these have not yet been tested for full compatibility with XLeRobot.
+
+<br>
 
 ## 💡 Credits
 
