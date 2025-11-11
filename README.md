@@ -76,7 +76,7 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 <br>
 
 ---
-### 4 — Arm Setup (Device Rules & Calibration)
+### 4. Arm Setup
 
 We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_right` and `/dev/xle_left`).
 
@@ -162,83 +162,74 @@ We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_
 
 <br>
 
-### Step 1 — Install the SDK
+### 1. Install the SDK
 ```bash
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
 sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
 sudo apt-get install librealsense2-dkms librealsense2-utils librealsense2-dev
 ```
 
-### Step 2 — Install the Python Package
+### 2. Install the Python Package
 ```bash
 pip install pyrealsense2
 ```
 
-### Step 3 — Verify the Camera
+### 3. Verify the Camera
 ```bash
 realsense-viewer
 ```
 ✅ You should see both **color** and **depth** video streams.  
-If not, check your USB connection or reinstall the SDK.
+   -  If not, check your USB connection or reinstall the SDK.
 
 </details>
-### 4. Activating the Environment
-
-***⚠️ Important:*** Every time you start the project, activate your environment!!!
-
-```bash
-conda activate lerobot
-```
 
 <br>
 
 ---
 
-### 5. Powering and Connecting the Hardware
+### 5. Connect and Power Everything
 
-***⚠️ Important:*** If motors become unresponsive after a failure, unplug and reconnect their motor power cables to reset them.
+1. Plug the **USB hub** into your laptop.  
+2. Connect all four devices:
+   - Two **wrist cameras**
+   - Two **arm control boards**
+3. _Optional:_ Plug the **RealSense camera** directly into your laptop.  
+4. Turn on the power and verify that all indicator lights are active.
+
+***⚠️ Important:*** If motors become unresponsive after a failure, unplug and reconnect their **motor power cables** to reset them.
 
 <br>
 
 ---
 
-### 6. Finding Your Robot Ports
+### 6. Check Connected Devices
 
-Use the built-in command to locate your connected robot devices:
-
+Use:
 ```bash
 lerobot-find-port
 ```
 
 Example output:
-
 ```
-right /dev/tty.usbmodem5A680127941
-left  /dev/tty.usbmodem5A680135181
+right /dev/xle_right
+left  /dev/xle_left
 ```
-
 <br>
 
 ---
 
-### 7. Calibrating the Robot (Run Once)
+### 7. Calibrating the Robot (Run once per device)
 
 You need to calibrate your robot only **once per device**.
 
-**Follower arm calibration:**
-
+**Follower Arm**
 ```bash
-lerobot-calibrate \
-    --robot.type=so101_follower \
-    --robot.port=/dev/tty.usbmodem5A680127941
+lerobot-calibrate     --robot.type=so101_follower     --robot.port=/dev/xle_right
 ```
 
-**Leader arm calibration:**
-
+**Leader Arm**
 ```bash
-lerobot-calibrate \
-    --teleop.type=so101_leader \
-    --teleop.port=/dev/tty.usbmodem5A680135181 
+lerobot-calibrate     --teleop.type=so101_leader     --teleop.port=/dev/xle_left
 ```
 
 
@@ -253,7 +244,7 @@ lerobot-calibrate \
 Navigate to the example folder and run a script:
 ```bash
 cd examples
-python3 0_so100_keyboard_joint_control 1.py
+python3 0_so100_keyboard_joint_control.py
 ```
 
 Compatible example scripts are available in the `examples` folder. Additional scripts can be found in `examples/provided_examples`, but these have not yet been tested for full compatibility with XLeRobot.
