@@ -95,7 +95,7 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 
 ### 4. Activating the Environment
 
-Every time you start the project, activate your environment!!!
+**Every time you start the project, activate your environment!!!**
 
 ```bash
 conda activate lerobot
