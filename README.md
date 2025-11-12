@@ -81,18 +81,26 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_right` and `/dev/xle_left`).
 
 1. **Plug in only the right arm’s control board**, then run:
+   
+   **Mac:**
+   ```bash
+   ioreg -p IOUSB -l | grep -iE "tty|serial"
+   ```
+   
+   **Linux:**
    ```bash
    udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}'
    ```
+   
    Example output:
    ```
    ATTRS{serial}=="A50285B1"
    ```
    Copy that serial number.
 
-2. **Unplug the right arm, plug in the left arm**, and repeat to get its serial.
+3. **Unplug the right arm, plug in the left arm**, and repeat to get its serial.
 
-3. **Create a new rules file:**
+4. **Create a new rules file:**
    ```bash
    sudo nano /etc/udev/rules.d/99-so100-robot.rules
    ```
@@ -106,13 +114,13 @@ We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_
    SUBSYSTEM=="tty", ATTRS{serial}=="YOUR_SERIAL_FOR_ARM_2", SYMLINK+="xle_left"
    ```
 
-4. **Apply the rules:**
+5. **Apply the rules:**
    ```bash
    sudo udevadm control --reload-rules
    sudo udevadm trigger
    ```
 
-5. **Copy calibration files:**
+6. **Copy calibration files:**
    ```bash
    cp left_arm.json right_arm.json ~/.cache/huggingface/lerobot/calibration/robots/
    ```
