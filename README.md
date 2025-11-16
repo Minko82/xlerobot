@@ -2,7 +2,7 @@
 # 🦾 XLeRobot
 
 **XLeRobot** is a customized version of [🤗 LeRobot](https://github.com/huggingface/lerobot) tailored for easier setup and use on both Mac and Linux systems.
-It provides additional setup guidance, calibration steps, and practical improvements for getting your robot up and running quickly.
+It provides additional setup guidance, calibration steps, and  improvements for getting your robot up and running quickly.
 
 <br>
 
@@ -40,16 +40,30 @@ Then **open a new terminal**.
 
 ### 2. Create the Environment
 
+Clone this repository:
 ```bash
 wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
 bash Miniforge3-$(uname)-$(uname -m).sh
+```
+Create a virtual environment with Python 3.10, using conda:
 
+```bash
 conda create -y -n lerobot python=3.10
+```
+
+Then activate your conda environment, you have to do this each time you open a shell to use lerobot:
+
+```bash
 conda activate lerobot
+```
+
+When using conda, install `ffmpeg` in your environment:
+
+```bash
 conda install ffmpeg -c conda-forge
 ```
 
-✅ **Tip:** Run `conda activate lerobot` every time you open a new terminal.
+⚠️ **IMPORTANT:** Run `conda activate lerobot` every time you open a new terminal.
 
 <br>
 
@@ -65,9 +79,19 @@ pip install 'lerobot[all]'
 pip install -e ".[feetech]"
 ```
 
-#### If you see build errors (Linux only): 
+<br>
 
-If you encounter build errors, you may need to install additional dependencies. To install these for linux run:
+### Troubleshooting: 
+
+If you encounter build errors, you may need to install additional dependencies. 
+
+**Mac:**
+
+```bash
+brew install cmake pkg-config ffmpeg python 
+```
+
+**Linux:**
 
 ```bash
 sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config
@@ -204,7 +228,7 @@ realsense-viewer
 3. _Optional:_ Plug the **RealSense camera** directly into your laptop.  
 4. Turn on the power and verify that all indicator lights are active.
 
-***⚠️ Important:*** If motors become unresponsive after a failure, unplug and reconnect their **motor power cables** to reset them.
+**⚠️ IMPORTANT:** If motors become unresponsive after a failure, unplug and reconnect their **motor power cables** to reset them.
 
 <br>
 
