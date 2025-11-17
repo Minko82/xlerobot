@@ -18,7 +18,7 @@ If you prefer to follow the original instructions, see:
 
 ---
 
-### 1. Install Conda
+## 1. Install Conda
 
 **Mac:**
 ```bash
@@ -38,7 +38,7 @@ Then **open a new terminal**.
 
 ---
 
-### 2. Create the Environment
+## 2. Create the Environment
 
 Clone this repository:
 ```bash
@@ -69,7 +69,7 @@ conda install ffmpeg -c conda-forge
 
 ---
 
-### 3. Install the XLe Robot
+## 3. Install the XLe Robot
 
 ```bash
 git clone https://github.com/Minko82/xle-robot.git
@@ -100,8 +100,66 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 <br>
 
 ---
-### 4. Arm Setup
+## 4. Arm Setup
+We’ll identify each arm and make sure their ports are stable for calibration.
+Steps differ slightly on macOS and Linux.
 
+<details>
+<summary><b>macOS Instructions</b></summary>
+   
+## 1. Get the Right Arm Serial Number
+
+**Connect the following:**
+
+-   Right bus servo adapter → Dock → Computer
+
+Then run:
+
+``` bash
+ioreg -p IOUSB -l | grep -iE "tty|serial"
+```
+
+**Example (partial) output:**
+
+``` bash
+|   +-o USB Single Serial@01140000  <class IOUSBHostDevice, ... >
+|         "iSerialNumber" = 3
+|         "USB Product Name" = "USB Single Serial"
+|         "kUSBSerialNumberString" = "5A68013518"
+|         "USBPortType" = 0
+|         "kUSBProductString" = "USB Single Serial"
+|         "USB Serial Number" = "5A68013518"
+```
+
+**Record the USB Serial Number**, for example:
+
+-   **Right arm USB Serial Number:** `5A68013518`
+
+<br>
+
+## 2. Get the Left Arm Serial Number
+
+1.  Unplug the right arm adapter.
+2.  Plug in the left arm adapter.
+3.  Run:
+
+``` bash
+ioreg -p IOUSB -l | grep -iE "tty|serial"
+```
+
+Then record the left arm's USB Serial Number, for example:
+
+-   **Left arm USB Serial Number:** `5A68012794`
+
+You will later see corresponding `/dev/tty.usbmodem*` device paths when
+running `lerobot-find-port`.
+
+<br>
+
+</details>
+
+<details>
+<summary><b>Linux</b></summary>
 We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_right` and `/dev/xle_left`).
 
 1. **Plug in only the right arm’s control board**, then run:
@@ -150,7 +208,7 @@ We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_
    ```
 
 <br>
-
+ </details>  
 ---
 
 <details>
