@@ -105,7 +105,7 @@ We’ll identify each arm and make sure their ports are stable for calibration.
 Steps differ slightly on macOS and Linux.
 
 <details>
-<summary><b>macOS Instructions</b></summary>
+<summary><b>🍎 macOS Instructions</b></summary>
    
 ## 1. Get the Right Arm Serial Number
 
@@ -156,33 +156,103 @@ running `lerobot-find-port`.
 
 <br>
 
+## 3. Calibrate the Robot
+*Run once per new computer used*
+
+### 1. Connect the Hardware
+
+
+Both arms must be calibrated, individually.
+
+Connect the dock and the correct bus-servo adapter to your computer:
+
+-   If calibrating the **left arm**, plug in the left adapter.
+-   If calibrating the **right arm**, plug in the right adapter.
+
+<br>
+
+### 2. Run the Calibration Command
+
+Use the follower-arm calibration command for each arm, but replace
+the path with the actual USB serial device you previously recorded.
+
+**Using your real device path:**
+
+``` bash
+lerobot-calibrate --robot.type=so101_follower --robot.port=/dev/tty.usbmodem5A680135181
+```
+
+<br>
+
+
+**Example output:**
+
+During calibration, you should see live joint position values updating
+as you move the arm.
+
+    -------------------------------------------
+    NAME            |    MIN |    POS |    MAX
+    shoulder_pan    |   2047 |   2047 |   2047
+    shoulder_lift   |   2047 |   2047 |   2047
+    elbow_flex      |   2046 |   2046 |   2046
+    wrist_flex      |   2047 |   2047 |   2047
+    wrist_roll      |   2047 |   2047 |   2047
+    gripper         |   2047 |   2047 |   2047
+
+**Note:**
+These numbers should change **as you physically move the arm** during
+calibration.
+<br>
+
 </details>
 
 <details>
-<summary><b>Linux</b></summary>
+<summary><b>🐧 Linux Instructions</b></summary>
+   
 We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_right` and `/dev/xle_left`).
 
-1. **Plug in only the right arm’s control board**, then run:
-   
-   **Mac:**
-   ```bash
-   ioreg -p IOUSB -l | grep -iE "tty|serial"
-   ```
-   
-   **Linux:**
-   ```bash
-   udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}'
-   ```
-   
-   Example output:
-   ```
-   ATTRS{serial}=="A50285B1"
-   ```
-   Copy that serial number.
+## 1. Get the Right Arm Serial Number
 
-3. **Unplug the right arm, plug in the left arm**, and repeat to get its serial.
+**Connect the following:**
 
-4. **Create a new rules file:**
+-   Right bus servo adapter → Dock → Computer
+
+Then, run:
+
+``` bash
+udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}'
+```
+
+**Example output:**
+
+``` bash
+ATTRS{serial}=="A50285B1"
+```
+
+**Record the USB Serial Number**.
+
+
+<br>
+
+## 2. Get the Left Arm Serial Number
+
+1.  Unplug the right arm adapter.
+2.  Plug in the left arm adapter.
+3.  Run:
+
+``` bash
+udevadm info -a -n /dev/ttyACM0 | grep 'ATTRS{serial}'
+```
+
+**Example output:**
+
+``` bash
+ATTRS{serial}=="A50285B1"
+```
+
+**Record the USB Serial Number**.
+
+## 3. Create a New udev Rules File
    ```bash
    sudo nano /etc/udev/rules.d/99-so100-robot.rules
    ```
@@ -196,23 +266,36 @@ We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_
    SUBSYSTEM=="tty", ATTRS{serial}=="YOUR_SERIAL_FOR_ARM_2", SYMLINK+="xle_left"
    ```
 
-5. **Apply the rules:**
-   ```bash
+ ## 4. Apply the Rules
+
+   ``` bash
    sudo udevadm control --reload-rules
    sudo udevadm trigger
    ```
 
-6. **Copy calibration files:**
+   After this, your arms will appear as:
+   
+   -   `/dev/xle_right`
+   -   `/dev/xle_left`
+
+6. **Make and copy calibration files:**
    ```bash
+   mkdir -p ~/.cache/huggingface/lerobot/calibration/robots
    cp left_arm.json right_arm.json ~/.cache/huggingface/lerobot/calibration/robots/
    ```
 
 <br>
  </details>  
+
+<br>
+ 
 ---
 
+## 5. Optional Components Setup
+These steps are optional and should be followed only if your project requires these tools.
+
 <details>
-<summary><b>📸 Wrist Cameras Setup (click to expand)</b></summary>
+<summary><b>🦾 Wrist Cameras Setup</b></summary>
 
 <br>
 
@@ -245,10 +328,8 @@ We’ll assign fixed USB names to each arm so they remain consistent (`/dev/xle_
 
 </details>
 
----
-
 <details>
-<summary><b>🟦 RealSense Camera Setup (click to expand)</b></summary>
+<summary><b> 📷 RealSense Camera Setup</b></summary>
 
 <br>
 
@@ -277,7 +358,7 @@ realsense-viewer
 
 ---
 
-### 5. Connect and Power Everything
+### 6. Connect and Power Everything
 
 1. Plug the **USB hub** into your laptop.  
 2. Connect all four devices:
@@ -292,41 +373,37 @@ realsense-viewer
 
 ---
 
-### 6. Check Connected Devices
+### 7. Check Connected Devices
 
-Use:
+Run:
 ```bash
 lerobot-find-port
 ```
 
-Example output:
+<br>
+
+### Example output:
+
+**Mac:**
+```bash
+'/dev/tty.usbmodem5A680135181'
+'/dev/tty.usbmodem5A680127941'
+```
+
+**Linux:**
 ```
 right /dev/xle_right
 left  /dev/xle_left
 ```
-<br>
 
----
 
-### 7. Calibrating the Robot (Run once per device)
-
-You need to calibrate your robot only **once per device**.
-
-**Follower Arm**
-```bash
-lerobot-calibrate     --robot.type=so101_follower     --robot.port=/dev/xle_right
-```
-
-**Leader Arm**
-```bash
-lerobot-calibrate     --teleop.type=so101_leader     --teleop.port=/dev/xle_left
-```
+These are the right and left arm serial numbers. They should correspond with earlier calibration steps.
 
 <br>
 
 ---
 
-### 8. Run example code
+### 8. Run sample code
 
 Navigate to the example folder and run a script:
 ```bash
@@ -334,7 +411,10 @@ cd examples
 python3 0_so100_keyboard_joint_control.py
 ```
 
-Compatible example scripts are available in the `examples` folder. Additional scripts can be found in `examples/provided_examples`, but these have not yet been tested for full compatibility with XLeRobot.
+Provide the correct device path name as prompted, from earlier.
+
+
+Additional compatible example scripts are available in the `examples` folder. More scripts can be found in `examples/provided_examples`, but these have not yet been tested for full compatibility with XLeRobot.
 
 <br>
 
