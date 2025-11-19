@@ -103,16 +103,12 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 ## 4. Arm Setup
 We’ll identify each arm and make sure their ports are stable for calibration.
 Steps differ slightly on macOS and Linux.
+For Windows, you will have to install WSL and run Ubuntu on the top of your Windows system. Please see the below Windows instructions. Then you should follow the Linux instructions and setup the arms.
 
 <details>
 <summary><b> Windows Instructions</b></summary>
-# Some simple instructions for WSL and USB Serial 
-This guide gives a simple instruction for how to install **WSL**, run **Ubuntu**, and map **USB/Serial devices** into WSL using **usbipd-win**. Works for:
 
-- ROS / micro-ROS development
-- Arduino, STM32, CH340/CP210x serial devices
-- LiDAR / IMU / motor drivers
-- General robotics and embedded development
+This guide gives a simple instruction for how to install **WSL**, run **Ubuntu**, and map **USB/Serial devices** into WSL using **usbipd-win**. 
 
 System requirements:
 **Windows 10 (21H2+)** or **Windows 11**
@@ -229,12 +225,7 @@ newgrp dialout
 ```
 ##  Done!
 
-You can now use serial devices in WSL for:
-
-- Arduino / STM32 firmware flashing
-- LiDAR / IMU / motor driver communication
-- ROS2 hardware integration
-- Robotics research and field experiments
+You can now go to the 🐧 Linux Instructions below and setup the arms.
 
 </details>
    
