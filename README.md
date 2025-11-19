@@ -550,7 +550,7 @@ Additional compatible example scripts are available in the `examples` folder. Mo
 
 This project builds on top of [🤗 LeRobot](https://github.com/huggingface/lerobot) by Hugging Face Robotics and [XLeRobot](https://github.com/Vector-Wangel/XLeRobot).
 
-Additional development, hardware integration, and testing have been contributed by [@Minko82](https://github.com/Minko82) and [@nanasci](https://github.com/nanasci).
+Additional development, hardware integration, and testing have been contributed by [@Minko82](https://github.com/Minko82) and [@nanasci](https://github.com/nanasci). Special thanks to Heyang Huang for providing Windows instructions.
 
 <br>
 
