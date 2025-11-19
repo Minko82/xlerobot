@@ -278,7 +278,8 @@ ATTRS{serial}=="A50285B1"
    -   `/dev/xle_right`
    -   `/dev/xle_left`
 
-6. **Make and copy calibration files:**
+ ## 5. **Make and copy calibration files:**
+ We have calibrated the arms for you (Linux only). Please find the calibration files (left_arm.json and right_arm.json) and move them to your cache directory.
    ```bash
    mkdir -p ~/.cache/huggingface/lerobot/calibration/robots
    cp left_arm.json right_arm.json ~/.cache/huggingface/lerobot/calibration/robots/
