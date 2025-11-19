@@ -105,6 +105,140 @@ We’ll identify each arm and make sure their ports are stable for calibration.
 Steps differ slightly on macOS and Linux.
 
 <details>
+<summary><b> Windows Instructions</b></summary>
+# Some simple instructions for WSL and USB Serial 
+This guide gives a simple instruction for how to install **WSL**, run **Ubuntu**, and map **USB/Serial devices** into WSL using **usbipd-win**. Works for:
+
+- ROS / micro-ROS development
+- Arduino, STM32, CH340/CP210x serial devices
+- LiDAR / IMU / motor drivers
+- General robotics and embedded development
+
+System requirements:
+**Windows 10 (21H2+)** or **Windows 11**
+
+## 1. Install WSL
+
+Open **PowerShell as Administrator**:
+
+Right click Start → **Windows PowerShell (Admin)**
+
+Run:
+
+```powershell
+wsl --install
+```
+
+To install a specific version (example: Ubuntu 22.04)（For ROS1, use Ubuntu20.04 or older version）
+
+```powershell
+wsl --install -d Ubuntu-22.04
+```
+
+List installed distros:
+
+```powershell
+wsl -l -v
+```
+
+## 2. First launch Ubuntu
+Open **Ubuntu** from Start Menu and set username & password.
+
+Update the system:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+## 3. USB Serial
+WSL blocks the serial reading, we need to use USB/Serial mapping tool like usbipd-win
+PowerShell (Admin):
+
+```powershell
+winget install --interactive --exact dorssel.usbipd-win
+```
+After that, restart the powershell for a new interface, then check USB devices:
+
+```powershell
+usbipd wsl list
+```
+
+## 4. Enable USB/IP support inside WSL
+In Ubuntu:
+
+```bash
+sudo apt install linux-tools-virtual hwdata linux-cloud-tools-virtual -y
+```
+
+Verify:
+
+```bash
+usbip list -l
+```
+
+## 5. Attach USB/Serial devices to WSL
+
+### 5.1 List devices
+
+PowerShell (Admin):
+
+```powershell
+usbipd wsl list
+```
+
+Example output:
+
+```
+BUSID  DEVICE
+1-3    USB Serial CH340 (COM3)
+1-5    Intel RealSense Camera
+```
+
+### 5.2 Attach device to WSL
+
+```powershell
+usbipd wsl attach --busid 1-3
+```
+
+If you have multiple distros, specify:
+
+```powershell
+usbipd wsl attach --busid 1-3 --distribution Ubuntu
+```
+##  6. Access device inside WSL
+
+In Ubuntu:
+
+```bash
+ls /dev/tty*
+```
+
+Common device names:
+
+| Device Type | Linux Device |
+|-------------|--------------|
+| CH340, CP210x, FTDI | `/dev/ttyUSB0` |
+| Arduino, Pico | `/dev/ttyACM0` |
+| Built-in serial | `/dev/ttyS0` |
+
+Fix permissions:
+
+```bash
+sudo usermod -aG dialout $USER
+newgrp dialout
+```
+##  Done!
+
+You can now use serial devices in WSL for:
+
+- Arduino / STM32 firmware flashing
+- LiDAR / IMU / motor driver communication
+- ROS2 hardware integration
+- Robotics research and field experiments
+
+</details>
+   
+<details>
 <summary><b>🍎 macOS Instructions</b></summary>
    
 ## 1. Get the Right Arm Serial Number
