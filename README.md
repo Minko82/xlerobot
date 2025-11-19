@@ -101,9 +101,9 @@ sudo apt-get install cmake build-essential python-dev pkg-config libavformat-dev
 
 ---
 ## 4. Arm Setup
-We’ll identify each arm and make sure their ports are stable for calibration.
-Steps differ slightly on macOS and Linux.
-For Windows, you will have to install WSL and run Ubuntu on the top of your Windows system. Please see the below Windows instructions. Then you should follow the Linux instructions and setup the arms.
+We’ll first identify each arm and make sure their ports are stable for calibration.
+
+Steps differ slightly on macOS and Linux. For Windows, you will have to install WSL and run Ubuntu on the top of your Windows system. Please see the below Windows instructions. Then you should follow the Linux instructions and setup the arms.
 
 <details>
 <summary><b> Windows Instructions</b></summary>
@@ -225,7 +225,7 @@ newgrp dialout
 ```
 ##  Done!
 
-You can now go to the 🐧 Linux Instructions below and setup the arms.
+You can now head to the 🐧 Linux Instructions below and setup the arms.
 
 </details>
    
