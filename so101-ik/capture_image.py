@@ -5,7 +5,7 @@ from PIL import Image
 
 # Create camera configuration
 config = RealSenseCameraConfig(
-    serial_number_or_name="YOUR_SERIAL_NUMBER", color_mode=ColorMode.RGB, width=640, height=480, fps=30
+    serial_number_or_name="video2", color_mode=ColorMode.RGB, width=640, height=480, fps=30
 )
 
 # Connect to camera
