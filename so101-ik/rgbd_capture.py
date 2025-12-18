@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-# Copied from realsense camera detection and modified just to take the picture.
+
+# Based off of lerobot-find-cameras.
+# Modified just to take one depth and one rgb picture.
+#
+#
+#
 # Copyright 2024 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
