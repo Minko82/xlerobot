@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # Based off of lerobot-find-cameras.
-# Modified just to take one depth and one rgb picture.
 #
 #
 #
