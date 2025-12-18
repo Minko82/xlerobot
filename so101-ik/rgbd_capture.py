@@ -306,8 +306,8 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default="outputs/captured_images",
-        help="Directory to save images. Default: outputs/captured_images",
+        default="images",
+        help="Directory to save images. Default: images",
     )
     parser.add_argument(
         "--record-time-s",
