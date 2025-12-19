@@ -24,19 +24,13 @@ def main():
 
     cam.connect(warmup=False)
 
-    ok = False
-    frame = None
-    for _ in range(30):
-        ok, frame = cam.read()
-        if ok:
-            break
-
-    if not ok:
+    # Read RGB and depth separately
+    try:
+        rgb = cam.read()
+        depth = cam.read_depth()
+    except Exception as e:
         cam.disconnect()
-        raise RuntimeError("No frames received")
-
-    rgb = frame["rgb"]
-    depth = frame["depth"]
+        raise RuntimeError(f"Failed to capture frames: {e}")
 
     Image.fromarray(rgb).save(out / "color.png")
     np.save(out / "depth.npy", depth)
