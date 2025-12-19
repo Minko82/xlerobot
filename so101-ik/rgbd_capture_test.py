@@ -41,7 +41,7 @@ def main():
 
     cam = RealSenseCamera(cfg)
 
-    cam.connect(warmup=True)
+    cam.connect(warmup=False)
     try:
         frame = cam.read()
 
