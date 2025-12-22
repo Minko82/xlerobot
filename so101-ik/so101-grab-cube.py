@@ -4,16 +4,16 @@ from ik_solver import IK_SO101
 import time
 
 # Connect to robot
-config = SO100FollowerConfig(port="/dev/ttyACM0", max_relative_target=0.15, use_degrees=True)
+config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
 ik_solve = IK_SO101()
 
 dt = 0.01
-test_dt = 0.5
+test_dt = 0.1
 
-trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0125], [-0.015, 0.0, 0.03])
+trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0], [-0.05, -0.01, -0.0808])
 # default position tolerance of 1e-3. timesteps at 500
 # Move individual joints (degrees)
 RAD2DEG = 180.0 / np.pi
@@ -42,14 +42,50 @@ def traj_to_action(q_deg: np.ndarray) -> dict:
 
 actions = [traj_to_action(q_deg) for q_deg in trajectory]
 
-# example_action = {
-#     "shoulder_pan.pos": 45.0,
-#     "shoulder_lift.pos": 30.0,
-#     "elbow_flex.pos": -20.0,
-#     "wrist_flex.pos": 10.0,
-#     "wrist_roll.pos": 30.0,
-#     "gripper.pos": 50.0,  # 0=closed, 100=open
-# }
+for action in actions:
+    action["gripper.pos"] = 100.0
+    robot.send_action(action)
+    time.sleep(dt)
+
+
+hold_action = {k: v for k, v in actions[-1].items() if k != "gripper.pos"}
+for grip in range(100, 5, -5):
+    action = dict(hold_action)
+    action["gripper.pos"] = float(grip)
+    robot.send_action(action)
+    time.sleep(0.05)
+
+trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.10], [-0.05, -0.01, -0.0808])
+traj_rad_stack = np.stack(trajectory_rad)
+trajectory = traj_rad_stack * RAD2DEG
+
+
+actions = [traj_to_action(q_deg) for q_deg in trajectory]
+
 for action in actions:
     robot.send_action(action)
-    time.sleep(test_dt)
+    time.sleep(dt)
+
+
+
+#Movement 2
+trajectory_rad = ik_solve.generate_ik([0.10, 0.0, 0.0], [-0.05, -0.01, -0.0808])
+traj_rad_stack = np.stack(trajectory_rad)
+trajectory = traj_rad_stack * RAD2DEG
+
+
+actions = [traj_to_action(q_deg) for q_deg in trajectory]
+
+for action in actions:
+    robot.send_action(action)
+    time.sleep(dt)
+
+hold_action = {k: v for k, v in actions[-1].items() if k != "gripper.pos"}
+
+for grip in range(5, 100, 5):
+    action = dict(hold_action)
+    action["gripper.pos"] = float(grip)
+    robot.send_action(action)
+    time.sleep(0.05)
+
+

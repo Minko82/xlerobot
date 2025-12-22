@@ -11,8 +11,10 @@ from pink.tasks import FrameTask, PostureTask
 
 import meshcat.geometry as g
 import meshcat.transformations as tf
-
-
+try:
+    from pinocchio.visualize import MeshcatVisualizer
+except ModuleNotFoundError:
+    MeshcatVisualizer = None
 class IK_SO101:
     def __init__(self) -> None:
         # File paths for model urdf and frame data
@@ -97,40 +99,43 @@ class IK_SO101:
         return trajectory
 
     def visualize_ik(self, trajectory: list, object_xyz):
-        # generates physical model
-        visual_model = pin.buildGeomFromUrdf(
-            self.model,
-            self.URDF_PATH,
-            pin.GeometryType.VISUAL,
-            package_dirs=[self.MESH_DIR],
-        )
-        # generates collisions
-        collision_model = pin.buildGeomFromUrdf(
-            self.model,
-            str(self.URDF_PATH),
-            pin.GeometryType.COLLISION,
-            package_dirs=[str(self.MESH_DIR)],
-        )
+        if MeshcatVisualizer is not None:
+            # generates physical model
+            visual_model = pin.buildGeomFromUrdf(
+                self.model,
+                self.URDF_PATH,
+                pin.GeometryType.VISUAL,
+                package_dirs=[self.MESH_DIR],
+            )
+            # generates collisions
+            collision_model = pin.buildGeomFromUrdf(
+                self.model,
+                str(self.URDF_PATH),
+                pin.GeometryType.COLLISION,
+                package_dirs=[str(self.MESH_DIR)],
+            )
 
-        # initiates visualizer, displays model
-        viz = MeshcatVisualizer(self.model, collision_model, visual_model)
-        viz.initViewer(open=True)
-        viz.loadViewerModel()
-        q = pin.neutral(self.model)
-        viz.display(q)
+            # initiates visualizer, displays model
+            viz = MeshcatVisualizer(self.model, collision_model, visual_model)
+            viz.initViewer(open=True)
+            viz.loadViewerModel()
+            q = pin.neutral(self.model)
+            viz.display(q)
 
-        # creates cube at object target point
-        viewer = viz.viewer
-        cube = g.Box([0.017, 0.017, 0.017])  # .17 cm cube
-        material = g.MeshLambertMaterial(color=0x00FFFF, opacity=0.8)
-        cube_pos = np.array(object_xyz)
-        viewer["target_cube"].set_object(cube, material)
-        viewer["target_cube"].set_transform(tf.translation_matrix(cube_pos))
+            # creates cube at object target point
+            viewer = viz.viewer
+            cube = g.Box([0.017, 0.017, 0.017])  # .17 cm cube
+            material = g.MeshLambertMaterial(color=0x00FFFF, opacity=0.8)
+            cube_pos = np.array(object_xyz)
+            viewer["target_cube"].set_object(cube, material)
+            viewer["target_cube"].set_transform(tf.translation_matrix(cube_pos))
 
-        # runs through the generated trajectory and visualizes it
-        for q_step in trajectory:
-            viz.display(q_step)
-            time.sleep(self.dt)
+            # runs through the generated trajectory and visualizes it
+            for q_step in trajectory:
+                viz.display(q_step)
+                time.sleep(self.dt)
+        else:
+            print("Meshcat failed to import.")
 
 
 if __name__ == "__main__":
