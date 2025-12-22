@@ -4,14 +4,14 @@ from ik_solver import IK_SO101
 import time
 
 # Connect to robot
-config = SO100FollowerConfig(port="/dev/ttyACM0")
+config = SO100FollowerConfig(port="/dev/ttyACM0", max_relative_target=0.15, use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
 ik_solve = IK_SO101()
 
 dt = 0.01
-test_dt = 0.1
+test_dt = 0.5
 
 trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0125], [-0.015, 0.0, 0.03])
 # default position tolerance of 1e-3. timesteps at 500
