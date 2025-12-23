@@ -11,10 +11,13 @@ from pink.tasks import FrameTask, PostureTask
 
 import meshcat.geometry as g
 import meshcat.transformations as tf
+
 try:
     from pinocchio.visualize import MeshcatVisualizer
 except ModuleNotFoundError:
     MeshcatVisualizer = None
+
+
 class IK_SO101:
     def __init__(self) -> None:
         # File paths for model urdf and frame data
@@ -31,6 +34,12 @@ class IK_SO101:
         self.model = pin.buildModelFromUrdf(str(self.URDF_PATH))
         self.data = self.model.createData()
         self.q = pin.neutral(self.model)
+
+        # Set wrist roll to 90 degrees (π/2 radians) for sideways orientation
+        jid = self.model.getJointId("wrist_roll")
+        idx = self.model.joints[jid].idx_q
+        self.q[idx] = np.pi / 2
+
         self.configuration = pink.Configuration(self.model, self.data, self.q)
 
         # pink tasks that can be used to create sets of frames to reach the final goal position
@@ -42,7 +51,7 @@ class IK_SO101:
         # make a list of the needed tasks
         self.tasks = [self.ee_task, self.posture_task]
 
-        self.gripper_offset = np.array([-0.015, 0.0, 0.03])
+        # self.gripper_offset = np.array([-0.015, 0.0, 0.03])
 
     def generate_ik(
         self,
@@ -98,7 +107,11 @@ class IK_SO101:
 
         return trajectory
 
-    def visualize_ik(self, trajectory: list, object_xyz):
+    def visualize_ik(
+        self,
+        trajectory: list,
+        object_xyz,
+    ):
         if MeshcatVisualizer is not None:
             # generates physical model
             visual_model = pin.buildGeomFromUrdf(
@@ -115,12 +128,13 @@ class IK_SO101:
                 package_dirs=[str(self.MESH_DIR)],
             )
 
+            ee_frame_id = self.model.getFrameId(self.EE_FRAME)
+
             # initiates visualizer, displays model
             viz = MeshcatVisualizer(self.model, collision_model, visual_model)
             viz.initViewer(open=True)
             viz.loadViewerModel()
-            q = pin.neutral(self.model)
-            viz.display(q)
+            viz.display(self.q)
 
             # creates cube at object target point
             viewer = viz.viewer
@@ -130,10 +144,20 @@ class IK_SO101:
             viewer["target_cube"].set_object(cube, material)
             viewer["target_cube"].set_transform(tf.translation_matrix(cube_pos))
 
+            viz.viewer["ee_point"].set_object(g.Sphere(0.005), g.MeshLambertMaterial(color=0xFF0000))
+
+            pos = self.data.oMf[ee_frame_id].translation
+            viz.viewer["ee_point"].set_transform(tf.translation_matrix(pos))
+
             # runs through the generated trajectory and visualizes it
             for q_step in trajectory:
                 viz.display(q_step)
+                pin.forwardKinematics(self.model, self.data, q_step)
+                pin.updateFramePlacements(self.model, self.data)
                 time.sleep(self.dt)
+                ee_pos = self.data.oMf[ee_frame_id].translation
+                viz.viewer["ee_point"].set_transform(tf.translation_matrix(ee_pos))
+
         else:
             print("Meshcat failed to import.")
 
@@ -145,7 +169,7 @@ if __name__ == "__main__":
     # 2. target position (x, y, z) in meters
     target = [0.30, 0.0, 0.0125]
 
-    gripper_offset = [-0.015, 0.0, 0.03]
+    gripper_offset = [0.0, 0.0, 0.0]
 
     print(f"Generating IK trajectory to: {target}")
 
