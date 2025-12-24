@@ -53,7 +53,7 @@ class IK_SO101:
 
         # self.gripper_offset = np.array([-0.015, 0.0, 0.03])
 
-    def generate_ik(
+    def generate_ik(  # TODO: Add support for target position for better grasping
         self,
         target_xyz: list[float],  # [x, y, z]
         gripper_offset_xyz: list[float],  # [x, y, z]
