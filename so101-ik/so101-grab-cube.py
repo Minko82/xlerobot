@@ -67,8 +67,7 @@ for action in actions:
     time.sleep(dt)
 
 
-
-#Movement 2
+# Movement 2
 trajectory_rad = ik_solve.generate_ik([0.10, 0.0, 0.0], [-0.05, -0.01, -0.0808])
 traj_rad_stack = np.stack(trajectory_rad)
 trajectory = traj_rad_stack * RAD2DEG
