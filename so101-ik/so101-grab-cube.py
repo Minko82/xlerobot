@@ -13,12 +13,6 @@ BUS_AB_MAX_ACCELERATION = 40
 BUS_AB_MAX_TORQUE = 800
 BUS_AB_MAX_VELOCITY = 100
 
-# Read current positions BEFORE disabling torque
-# We'll set these as Goal_Position before re-enabling to prevent sudden movements
-current_positions = {}
-for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
-    current_positions[motor_name] = robot.bus.read("Present_Position", motor_name, normalize=False)
-
 # Disabling torque before writing to EPROM
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
     robot.bus.disable_torque(motor_name)
@@ -56,26 +50,19 @@ for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", 
 
     # Check for mismatches
     if max_accel != BUS_AB_MAX_ACCELERATION:
-        print(f"  ⚠️  WARNING: Maximum_Acceleration mismatch!")
+        print(f"WARNING: Maximum_Acceleration mismatch!")
     if max_vel != BUS_AB_MAX_VELOCITY:
-        print(f"  ⚠️  WARNING: Maximum_Velocity_Limit mismatch!")
+        print(f"WARNING: Maximum_Velocity_Limit mismatch!")
     if max_torque != expected_torque:
-        print(f"  ⚠️  WARNING: Max_Torque_Limit mismatch!")
+        print(f"WARNING: Max_Torque_Limit mismatch!")
 
 print("\n" + "=" * 60)
 print("VERIFICATION COMPLETE - Re-enabling torque")
 print("=" * 60 + "\n")
 
-# Set current positions as Goal_Position before re-enabling torque
-# This prevents sudden movements when torque is enabled
-for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
-    robot.bus.write("Goal_Position", motor_name, current_positions[motor_name], normalize=False)
-
 # Re-enable torque after EPROM writes
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
     robot.bus.enable_torque(motor_name)
-
-print("Motors holding current position with new limits applied.\n")
 
 ik_solve = IK_SO101()
 
