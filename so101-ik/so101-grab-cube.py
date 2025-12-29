@@ -8,25 +8,33 @@ config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
+#Limits and restrictions
 BUS_AB_MAX_ACCELERATION = 40
 BUS_AB_MAX_TORQUE = 800
 BUS_AB_MAX_VELOCITY = 100
 
+#Maximum_Acceleration 0-254 - EPROM (permanently written to motor, persistent) 
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
-    robot.bus.write("Acceleration", motor_name, BUS_AB_MAX_ACCELERATION)
+    robot.bus.write("Maximum_Acceleration", motor_name, BUS_AB_MAX_ACCELERATION)
+#Acceleration is non-persistent SRAM version
 
+#Max_Torque_Limit 0-1000 - EPROM (permanently written to motor, persistent)
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"]:
     robot.bus.write("Max_Torque_Limit", motor_name, BUS_AB_MAX_TORQUE)
+#Torque_Limit is non-persistent SRAM version
 
+#Maximum_Velocity_Limit 0-254 - EPROM (permanently written to motor, persistent)
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
     robot.bus.write("Maximum_Velocity_Limit", motor_name, BUS_AB_MAX_VELOCITY)
+#Goal_Velocity is non-persistent SRAM version
+
 
 ik_solve = IK_SO101()
 
 dt = 0.01
 test_dt = 0.1
 
-trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0], [0.0, 0.0, -0.05])
+trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0], [-0.05, -0.01, -0.0808])
 # default position tolerance of 1e-3. timesteps at 500
 # Move individual joints (degrees)
 RAD2DEG = 180.0 / np.pi
