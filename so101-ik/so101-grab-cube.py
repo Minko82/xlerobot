@@ -32,6 +32,37 @@ for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", 
     robot.bus.write("Maximum_Velocity_Limit", motor_name, BUS_AB_MAX_VELOCITY)
 # Goal_Velocity is non-persistent SRAM version
 
+# Verify EPROM values were set correctly
+print("\n" + "="*60)
+print("VERIFYING EPROM VALUES")
+print("="*60)
+for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
+    max_accel = robot.bus.read("Maximum_Acceleration", motor_name, normalize=False)
+    max_vel = robot.bus.read("Maximum_Velocity_Limit", motor_name, normalize=False)
+    max_torque = robot.bus.read("Max_Torque_Limit", motor_name, normalize=False)
+
+    print(f"\n{motor_name}:")
+    print(f"  Maximum_Acceleration:   {max_accel:>3} (expected: {BUS_AB_MAX_ACCELERATION})")
+    print(f"  Maximum_Velocity_Limit: {max_vel:>3} (expected: {BUS_AB_MAX_VELOCITY})")
+
+    expected_torque = BUS_AB_MAX_TORQUE if motor_name != "gripper" else 500
+    print(f"  Max_Torque_Limit:       {max_torque:>4} (expected: {expected_torque})")
+
+    # Check for mismatches
+    if max_accel != BUS_AB_MAX_ACCELERATION:
+        print(f"  ⚠️  WARNING: Maximum_Acceleration mismatch!")
+    if max_vel != BUS_AB_MAX_VELOCITY:
+        print(f"  ⚠️  WARNING: Maximum_Velocity_Limit mismatch!")
+    if max_torque != expected_torque:
+        print(f"  ⚠️  WARNING: Max_Torque_Limit mismatch!")
+
+print("\n" + "="*60)
+print("VERIFICATION COMPLETE - Re-enabling torque")
+print("="*60 + "\n")
+
+# Re-enable torque after EPROM writes
+for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
+    robot.bus.enable_torque(motor_name)
 
 ik_solve = IK_SO101()
 
