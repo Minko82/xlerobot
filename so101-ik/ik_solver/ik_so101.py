@@ -35,11 +35,10 @@ class IK_SO101:
         self.data = self.model.createData()
         self.q = pin.neutral(self.model)
 
-        # Set wrist roll to 90 degrees (π/2 radians) for sideways orientation
-        jid = self.model.getJointId("wrist_roll")
-        idx = self.model.joints[jid].idx_q
-        self.q[idx] = np.pi / 2
-
+        # # Set wrist roll to 90 degrees (π/2 radians) for sideways orientation
+        # jid = self.model.getJointId("wrist_roll")
+        # idx = self.model.joints[jid].idx_q
+        # self.q[idx] = np.pi / 2
         self.configuration = pink.Configuration(self.model, self.data, self.q)
 
         # pink tasks that can be used to create sets of frames to reach the final goal position
