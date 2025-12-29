@@ -8,12 +8,25 @@ config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
+BUS_AB_MAX_ACCELERATION = 40
+BUS_AB_MAX_TORQUE = 800
+BUS_AB_MAX_VELOCITY = 100
+
+for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
+    robot.bus.write("Acceleration", motor_name, BUS_AB_MAX_ACCELERATION)
+
+for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"]:
+    robot.bus.write("Max_Torque_Limit", motor_name, BUS_AB_MAX_TORQUE)
+
+for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
+    robot.bus.write("Maximum_Velocity_Limit", motor_name, BUS_AB_MAX_VELOCITY)
+
 ik_solve = IK_SO101()
 
 dt = 0.01
 test_dt = 0.1
 
-trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0], [-0.05, -0.02, -0.0808])
+trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0], [0.0, 0.0, -0.05])
 # default position tolerance of 1e-3. timesteps at 500
 # Move individual joints (degrees)
 RAD2DEG = 180.0 / np.pi

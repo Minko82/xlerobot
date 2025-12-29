@@ -21,10 +21,11 @@ depth_img = o3d.geometry.Image(depth_data)
 
 # Create RGBD image
 rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
-    color_img, depth_img,
+    color_img,
+    depth_img,
     depth_scale=1000.0,  # RealSense depth is in millimeters
-    depth_trunc=3.0,     # Truncate depth at 3 meters
-    convert_rgb_to_intensity=False
+    depth_trunc=3.0,  # Truncate depth at 3 meters
+    convert_rgb_to_intensity=False,
 )
 
 # Get camera intrinsics from RealSense
@@ -49,27 +50,18 @@ o3d_intrinsic = o3d.camera.PinholeCameraIntrinsic(
     fx=intrinsics.fx,
     fy=intrinsics.fy,
     cx=intrinsics.ppx,
-    cy=intrinsics.ppy
+    cy=intrinsics.ppy,
 )
 
 # Create point cloud from RGBD image
-pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-    rgbd,
-    o3d_intrinsic
-)
+pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, o3d_intrinsic)
 
 # Flip the point cloud (RealSense coordinate system)
-pcd.transform([[1, 0, 0, 0],
-               [0, -1, 0, 0],
-               [0, 0, -1, 0],
-               [0, 0, 0, 1]])
+pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
 
 print(f"Point cloud has {len(pcd.points)} points")
 
 # Visualize the point cloud
-o3d.visualization.draw_geometries([pcd],
-                                  window_name="Cube Point Cloud",
-                                  width=800,
-                                  height=600,
-                                  left=50,
-                                  top=50)
+o3d.visualization.draw_geometries(
+    [pcd], window_name="Cube Point Cloud", width=800, height=600, left=50, top=50
+)
