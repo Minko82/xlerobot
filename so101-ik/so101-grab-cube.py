@@ -34,7 +34,7 @@ ik_solve = IK_SO101()
 dt = 0.01
 test_dt = 0.1
 
-trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.0], [-0.05, -0.01, -0.0808])
+trajectory_rad = ik_solve.generate_ik([0.35, 0.0, 0.0], [-0.05, -0.01, -0.0808])
 # default position tolerance of 1e-3. timesteps at 500
 # Move individual joints (degrees)
 RAD2DEG = 180.0 / np.pi
