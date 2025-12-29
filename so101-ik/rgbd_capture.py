@@ -138,9 +138,10 @@ def save_image(
     camera_identifier: str | int,
     images_dir: Path,
     camera_type: str,
+    depth_array: np.ndarray | None = None,
 ):
     """
-    Saves a single image to disk using Pillow. Handles color conversion if necessary.
+    Saves RGB image and optionally depth data to disk.
     """
     try:
         img = Image.fromarray(img_array, mode="RGB")
@@ -153,6 +154,22 @@ def save_image(
         path.parent.mkdir(parents=True, exist_ok=True)
         img.save(str(path))
         logger.info(f"Saved image: {path}")
+
+        # Save depth if available
+        if depth_array is not None:
+            depth_npy_path = images_dir / f"{filename_prefix}_depth.npy"
+            np.save(str(depth_npy_path), depth_array)
+            logger.info(f"Saved depth: {depth_npy_path}")
+
+            # Save depth visualization
+            depth_f = depth_array.astype(np.float32)
+            max_maybe = np.percentile(depth_f[depth_f > 0], 95) if np.any(depth_f > 0) else 1.0
+            denom = max(max_maybe, 1.0)
+            depth_8 = np.clip(depth_f / denom, 0.0, 1.0) * 255.0
+            depth_viz = Image.fromarray(depth_8.astype(np.uint8), mode="L")
+            depth_viz_path = images_dir / f"{filename_prefix}_depth.png"
+            depth_viz.save(str(depth_viz_path))
+            logger.info(f"Saved depth visualization: {depth_viz_path}")
     except Exception as e:
         logger.error(f"Failed to save image for camera {camera_identifier} (type {camera_type}): {e}")
 
@@ -176,6 +193,7 @@ def create_camera_instance(cam_meta: dict[str, Any]) -> dict[str, Any] | None:
             rs_config = RealSenseCameraConfig(
                 serial_number_or_name=cam_id,
                 color_mode=ColorMode.RGB,
+                use_depth=True,
             )
             instance = RealSenseCamera(rs_config)
         else:
@@ -204,12 +222,21 @@ def process_camera_image(
 
     try:
         image_data = cam.read()
+        depth_data = None
+
+        # Capture depth for RealSense cameras
+        if cam_type_str == "RealSense" and hasattr(cam, "read_depth"):
+            try:
+                depth_data = cam.read_depth()
+            except Exception as e:
+                logger.warning(f"Failed to read depth from {cam_type_str} camera {cam_id_str}: {e}")
 
         return save_image(
             image_data,
             cam_id_str,
             output_dir,
             cam_type_str,
+            depth_data,
         )
     except TimeoutError:
         logger.warning(
