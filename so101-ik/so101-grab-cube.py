@@ -8,25 +8,29 @@ config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
-#Limits and restrictions
+# Limits and restrictions
 BUS_AB_MAX_ACCELERATION = 40
 BUS_AB_MAX_TORQUE = 800
 BUS_AB_MAX_VELOCITY = 100
 
-#Maximum_Acceleration 0-254 - EPROM (permanently written to motor, persistent) 
+# Disabling torque before writing to EPROM
+for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
+    robot.bus.disable_torque(motor_name)
+
+# Maximum_Acceleration 0-254 - EPROM (permanently written to motor, persistent)
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
     robot.bus.write("Maximum_Acceleration", motor_name, BUS_AB_MAX_ACCELERATION)
-#Acceleration is non-persistent SRAM version
+# Acceleration is non-persistent SRAM version
 
-#Max_Torque_Limit 0-1000 - EPROM (permanently written to motor, persistent)
+# Max_Torque_Limit 0-1000 - EPROM (permanently written to motor, persistent)
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"]:
     robot.bus.write("Max_Torque_Limit", motor_name, BUS_AB_MAX_TORQUE)
-#Torque_Limit is non-persistent SRAM version
+# Torque_Limit is non-persistent SRAM version
 
-#Maximum_Velocity_Limit 0-254 - EPROM (permanently written to motor, persistent)
+# Maximum_Velocity_Limit 0-254 - EPROM (permanently written to motor, persistent)
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:
     robot.bus.write("Maximum_Velocity_Limit", motor_name, BUS_AB_MAX_VELOCITY)
-#Goal_Velocity is non-persistent SRAM version
+# Goal_Velocity is non-persistent SRAM version
 
 
 ik_solve = IK_SO101()
