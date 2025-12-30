@@ -163,9 +163,8 @@ wandb/
 # Dev scripts
 .dev/
 
-# Data folders
+# Data folders - add outputs later #
 data/
-outputs/
 
 # Translations
 *.mo
