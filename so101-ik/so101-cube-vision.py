@@ -44,6 +44,7 @@ o3d_intrinsic = o3d.camera.PinholeCameraIntrinsic(
     cx=intrinsics["ppx"],
     cy=intrinsics["ppy"],
 )
+print(o3d_intrinsic)
 print("intrinsic created.")
 # create point cloud from rgbd image
 pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, o3d_intrinsic)
