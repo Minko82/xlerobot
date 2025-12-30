@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import cv2
 import pyrealsense2 as rs
+import json
 
 out_dir = Path("outputs/realsense_capture")
 out_dir.mkdir(parents=True, exist_ok=True)
@@ -55,6 +56,27 @@ np.save(out_dir / "depth_meters.npy", depth_m)
 depth_vis = cv2.normalize(depth_image, None, 0, 255, cv2.NORM_MINMAX)
 depth_vis = depth_vis.astype(np.uint8)
 cv2.imwrite(str(out_dir / "depth_vis.png"), depth_vis)
+
+# 3. Extract Intrinsics
+color_stream = profile.get_stream(rs.stream.color)
+intrinsics = color_stream.as_video_stream_profile().get_intrinsics()
+
+# 4. create a dictionary of the values
+intrinsic_data = {
+    "width": intrinsics.width,
+    "height": intrinsics.height,
+    "fx": intrinsics.fx,
+    "fy": intrinsics.fy,
+    "ppx": intrinsics.ppx,
+    "ppy": intrinsics.ppy,
+    "model": str(intrinsics.model),
+}
+
+intrinsics_path = os.path.join(out_dir, "intrinsic_data.json")
+
+# 5. Save to JSON
+with open(intrinsics_path, "w") as f:
+    json.dump(intrinsic_data, f, indent=4)
 
 pipeline.stop()
 print("Saved to:", out_dir)
