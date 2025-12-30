@@ -5,7 +5,7 @@ from pathlib import Path
 
 # Setup paths
 script_dir = Path(__file__).resolve().parent
-output_path = script_dir / "captures" / "intrinsics.json"
+output_path = script_dir / "outputs" / "realsense_capture"
 output_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
 
 # 1. Connect to RealSense
