@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import open3d as o3d
 import numpy as np
-import pyrealsense2 as rs
 from pathlib import Path
 import json
 
@@ -9,7 +8,7 @@ serial = "838212073725"
 
 # load captured images from captures/ directory
 script_dir = Path(__file__).resolve().parent
-captures_dir = script_dir / "outputs" /"realsense_capture"
+captures_dir = script_dir / "outputs" / "realsense_capture"
 print("captured images loaded.")
 
 # load color image
@@ -32,7 +31,7 @@ rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
 print("rgbd image created.")
 
 with open(captures_dir / "intrinsic_data.json", "r") as f:
-        intrinsics = json.load(f)
+    intrinsics = json.load(f)
 print("intrinsics loaded from json.")
 
 # create open3d camera intrinsic
