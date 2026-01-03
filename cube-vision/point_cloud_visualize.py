@@ -15,8 +15,6 @@ print(f"Point cloud has colors: {pcd.has_colors()}")
 
 # Visualize the point cloud
 print("Displaying point cloud...")
-o3d.visualization.draw_geometries([pcd],
-                                  window_name="Point Cloud Visualization",
-                                  width=1024,
-                                  height=768,
-                                  point_show_normal=False)
+o3d.visualization.draw_geometries(
+    [pcd], window_name="Point Cloud Visualization", width=1024, height=768, point_show_normal=False
+)
