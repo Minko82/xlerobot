@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import open3d as o3d
 import numpy as np
 from pathlib import Path
@@ -105,7 +104,6 @@ class PointCloud:
     def segment_grippers(self):
         if self.pcd is None:
             raise RuntimeError("No point cloud loaded. Create or load a point cloud first.")
-        # Implementation placeholder
         pass
 
     def visualize(self, geometries=None, window_name="Point Cloud Visualization"):
@@ -124,14 +122,10 @@ if __name__ == "__main__":
     # Create processor and load/create point cloud
     processor = PointCloud()
 
-    # Option 1: Create point cloud from RGB-D images
     processor.create_point_cloud_from_rgbd(scale_depth=1.0, truncate_depth=0.75)
-
-    # Optionally save the point cloud
-    # processor.save_to_ply()
 
     # Segment the table plane
     processor.segment_plane(distance_threshold=0.019)
-
+    processor.save_to_ply()
     # Visualize the segmentation
     processor.visualize()
