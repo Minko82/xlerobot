@@ -2,6 +2,7 @@ import open3d as o3d
 import numpy as np
 from pathlib import Path
 import json
+import matplotlib.pyplot as plt
 
 
 class PointCloud:
@@ -24,7 +25,7 @@ class PointCloud:
         self.pcd = o3d.io.read_point_cloud(str(ply_path))
         print(f"Loaded point cloud with {len(self.pcd.points)} points from {ply_path}")
 
-    def create_point_cloud_from_rgbd(self, scale_depth=1.0, truncate_depth=0.75):
+    def create_point_cloud_from_rgbd(self, scale_depth=1.0, truncate_depth=0.75, min_depth=0.35):
         # Load color image
         color_path = self.captures_dir / "color.png"
         if not color_path.exists():
@@ -38,7 +39,10 @@ class PointCloud:
             raise FileNotFoundError(f"Depth data not found: {depth_path}")
         depth_data = np.load(depth_path)
         print("Depth data loaded")
-
+        print(f"Depth range: min={depth_data.min():.4f}, max={depth_data.max():.4f}")
+        print(f"Points <= 0.10: {np.sum(depth_data <= 0.10)}")
+        print(f"Points between 0.10 and 0.15: {np.sum((depth_data > 0.10) & (depth_data <= 0.15))}")
+        depth_data[depth_data <= min_depth] = 0.0
         # Convert depth numpy array to open3d image
         depth_img = o3d.geometry.Image(depth_data.astype(np.float32))
         print("Depth image created")
@@ -76,46 +80,55 @@ class PointCloud:
         self.pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, o3d_intrinsic)
         print(f"Point cloud created with {len(self.pcd.points)} points")
 
-        return self.pcd
-
     def save_to_ply(self):
-        if self.pcd is None:
-            raise RuntimeError("No point cloud to save. Create or load a point cloud first.")
-
         o3d.io.write_point_cloud(str(self.ply_path), self.pcd)
         print(f"Saved point cloud to {self.ply_path}")
 
-    def segment_plane(self, distance_threshold=0.019, ransac_n=3, num_iterations=1000):
-        if self.pcd is None:
-            raise RuntimeError("No point cloud loaded. Create or load a point cloud first.")
-
+    def segment_plane(self, distance_threshold=0.019, ransac_n=3, num_iterations=10000):
         self.plane_model, inliers = self.pcd.segment_plane(
             distance_threshold=distance_threshold, ransac_n=ransac_n, num_iterations=num_iterations
         )
         [a, b, c, d] = self.plane_model
         print(f"Plane equation: {a:.2f}x + {b:.2f}y + {c:.2f}z + {d:.2f} = 0")
 
-        self.inlier_cloud = self.pcd.select_by_index(inliers)
-        self.outlier_cloud = self.pcd.select_by_index(inliers, invert=True)
-        self.inlier_cloud.paint_uniform_color([0, 0.3, 1.0])  # Blue-ish plane
-
-        return self.inlier_cloud, self.outlier_cloud, self.plane_model
+        self.pcd = self.pcd.select_by_index(inliers, invert=True)
 
     def segment_grippers(self):
-        if self.pcd is None:
-            raise RuntimeError("No point cloud loaded. Create or load a point cloud first.")
         pass
 
-    def visualize(self, geometries=None, window_name="Point Cloud Visualization"):
-        if geometries is None:
-            if self.inlier_cloud is not None and self.outlier_cloud is not None:
-                geometries = [self.inlier_cloud, self.outlier_cloud]
-            elif self.pcd is not None:
-                geometries = [self.pcd]
-            else:
-                raise RuntimeError("No point cloud to visualize")
+    def dbscan_objects(self, min_points_per_object=300):
+        labels = np.array(self.pcd.cluster_dbscan(eps=0.02, min_points=10, print_progress=True))
 
-        o3d.visualization.draw_geometries(geometries, window_name=window_name, width=1024, height=768)
+        max_label = labels.max()
+        print(f"point cloud has {max_label + 1} clusters")
+
+        # Apply colors to visualize clusters
+        colors = plt.get_cmap("tab20")(labels / (max_label if max_label > 0 else 1))
+        colors[labels < 0] = 0
+        self.pcd.colors = o3d.utility.Vector3dVector(colors[:, :3])
+
+        # Extract coordinates for each object
+        points = np.asarray(self.pcd.points)
+        objects = []
+        for i in range(max_label + 1):
+            cluster_mask = labels == i
+            cluster_points = points[cluster_mask]
+            centroid = cluster_points.mean(axis=0)
+            if len(cluster_points) >= min_points_per_object:
+                objects.append(
+                    {
+                        "label": i,
+                        "centroid": centroid,
+                        "points": cluster_points,
+                        "num_points": len(cluster_points),
+                    }
+                )
+                print(f"Object {i}: centroid={centroid}, {len(cluster_points)} points")
+
+        return objects
+
+    def visualize(self, window_name="Point Cloud Visualization"):
+        o3d.visualization.draw_geometries([self.pcd], window_name=window_name, width=1024, height=768)
 
 
 if __name__ == "__main__":
@@ -126,6 +139,9 @@ if __name__ == "__main__":
 
     # Segment the table plane
     processor.segment_plane(distance_threshold=0.019)
+    processor.dbscan_objects()
     processor.save_to_ply()
+
+    # processor.dbscan_objects()
     # Visualize the segmentation
     processor.visualize()
