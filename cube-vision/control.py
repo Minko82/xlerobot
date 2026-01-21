@@ -1,0 +1,99 @@
+from lerobot.robots.so100_follower import SO100Follower, SO100FollowerConfig
+import numpy as np
+from ik_solver import IK_SO101
+from point_cloud import PointCloud
+from frame_transform import frame_transform
+import time
+
+# Connect to robot
+config = SO100FollowerConfig(port="/dev/ttyACM1", use_degrees=True)
+robot = SO100Follower(config)
+robot.connect()
+
+# Get coordinate object from the frame of the realsense
+point_cloud = PointCloud()
+point_cloud.create_point_cloud_from_rgbd()
+point_cloud.segment_plane()
+location_realsense_frame = point_cloud.dbscan_objects()
+
+
+ik_solve = IK_SO101()
+
+dt = 0.01
+test_dt = 0.1
+
+trajectory_rad = ik_solve.generate_ik([0.35, 0.0, 0.0], [-0.05, -0.01, -0.0808])
+# default position tolerance of 1e-3. timesteps at 500
+# Move individual joints (degrees)
+RAD2DEG = 180.0 / np.pi
+traj_rad_stack = np.stack(trajectory_rad)
+trajectory = traj_rad_stack * RAD2DEG
+
+ARM_JOINT_KEYS = [
+    "shoulder_pan.pos",
+    "shoulder_lift.pos",
+    "elbow_flex.pos",
+    "wrist_flex.pos",
+    "wrist_roll.pos",
+    "gripper.pos",
+]
+
+for step in trajectory:
+    print(step)
+
+
+def traj_to_action(q_deg: np.ndarray) -> dict:
+    # Convert list of values to dict for lerobot usage
+    assert q_deg.shape[0] == len(ARM_JOINT_KEYS)
+
+    return {joint: float(q_deg[i]) for i, joint in enumerate(ARM_JOINT_KEYS)}
+
+
+actions = [traj_to_action(q_deg) for q_deg in trajectory]
+
+for action in actions:
+    action["gripper.pos"] = 100.0
+    robot.send_action(action)
+    time.sleep(dt)
+
+
+hold_action = {k: v for k, v in actions[-1].items() if k != "gripper.pos"}
+for grip in range(100, 5, -5):
+    action = dict(hold_action)
+    action["gripper.pos"] = float(grip)
+    robot.send_action(action)
+    time.sleep(0.05)
+
+trajectory_rad = ik_solve.generate_ik([0.30, 0.0, 0.10], [-0.05, -0.01, -0.0808])
+traj_rad_stack = np.stack(trajectory_rad)
+trajectory = traj_rad_stack * RAD2DEG
+
+
+actions = [traj_to_action(q_deg) for q_deg in trajectory]
+
+for action in actions:
+    robot.send_action(action)
+    time.sleep(dt)
+
+
+# Movement 2
+trajectory_rad = ik_solve.generate_ik([0.10, 0.0, 0.0], [-0.05, -0.01, -0.0808])
+traj_rad_stack = np.stack(trajectory_rad)
+trajectory = traj_rad_stack * RAD2DEG
+
+
+actions = [traj_to_action(q_deg) for q_deg in trajectory]
+
+for action in actions:
+    robot.send_action(action)
+    time.sleep(dt)
+
+hold_action = {k: v for k, v in actions[-1].items() if k != "gripper.pos"}
+
+for grip in range(5, 100, 5):
+    action = dict(hold_action)
+    action["gripper.pos"] = float(grip)
+    robot.send_action(action)
+    time.sleep(0.05)
+
+robot.disconnect()
