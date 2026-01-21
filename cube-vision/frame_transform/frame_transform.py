@@ -96,13 +96,13 @@ class FrameTransform:
 # -------------------------
 
 def camera_xyz_to_base_xyz(
-    urdf_path: str = str(Path(__file__).parent / "xlerobot/xlerobot.urdf"),
     x: float,
     y: float,
     z: float,
     joint_values: Dict[str, float],
     base_frame: str = "Base",
     cam_frame: str = "head_camera_rgb_optical_frame",
+    urdf_path: str = str(Path(__file__).parent / "xlerobot/xlerobot.urdf"),
 ) -> Tuple[float, float, float]:
     """
     Transform (x,y,z) from cam_frame into base_frame.
