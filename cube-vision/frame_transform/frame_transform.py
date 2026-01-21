@@ -9,7 +9,7 @@ import pinocchio as pin
 
 
 @dataclass
-class FrameTransformer:
+class FrameTransform:
     model: pin.Model
     data: pin.Data
     base_frame_id: int
@@ -21,7 +21,7 @@ class FrameTransformer:
         urdf_path: str,
         base_frame: str = "Base",
         cam_frame: str = "head_camera_rgb_optical_frame",
-    ) -> "FrameTransformer":
+    ) -> "FrameTransform":
         model = pin.buildModelFromUrdf(urdf_path)
         data = model.createData()
 
@@ -115,7 +115,7 @@ def camera_xyz_to_base_xyz(
     If you are using root_x_axis_joint / root_y_axis_joint / root_z_rotation_joint in your runtime
     and they are not zero, include them too (meters, meters, radians respectively).
     """
-    tfm = FrameTransformer.from_urdf(urdf_path, base_frame=base_frame, cam_frame=cam_frame)
+    tfm = FrameTransform.from_urdf(urdf_path, base_frame=base_frame, cam_frame=cam_frame)
     q = tfm.build_q(joint_values)
 
     p_base = tfm.transform_point_cam_to_base(np.array([x, y, z]), q)
