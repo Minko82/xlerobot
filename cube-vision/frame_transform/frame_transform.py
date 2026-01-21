@@ -96,7 +96,7 @@ class FrameTransform:
 # -------------------------
 
 def camera_xyz_to_base_xyz(
-    urdf_path: str,
+    urdf_path: str = str(Path(__file__).parent / "xlerobot/xlerobot.urdf"),
     x: float,
     y: float,
     z: float,
