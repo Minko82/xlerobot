@@ -14,15 +14,18 @@ robot.connect()
 point_cloud = PointCloud()
 point_cloud.create_point_cloud_from_rgbd()
 point_cloud.segment_plane()
-location_realsense_frame = point_cloud.dbscan_objects()
-
+location_rs_frame = point_cloud.dbscan_objects()
+RS_JOINT_KEYS = {"head_pan_joint": 0.0, "head_tilt_joint": 0.0}
+arm_frame_x, arm_frame_y, arm_frame_z = frame_transform.camera_xyz_to_base_xyz(
+    location_rs_frame[0], location_rs_frame[1], location_rs_frame[2], RS_JOINT_KEYS
+)
 
 ik_solve = IK_SO101()
 
 dt = 0.01
 test_dt = 0.1
 
-trajectory_rad = ik_solve.generate_ik([0.35, 0.0, 0.0], [-0.05, -0.01, -0.0808])
+trajectory_rad = ik_solve.generate_ik([arm_frame_x, arm_frame_y, arm_frame_z], [-0.05, -0.01, -0.0808])
 # default position tolerance of 1e-3. timesteps at 500
 # Move individual joints (degrees)
 RAD2DEG = 180.0 / np.pi
