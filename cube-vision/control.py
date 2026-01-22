@@ -6,7 +6,7 @@ from frame_transform import frame_transform
 import time
 
 # Connect to robot
-config = SO100FollowerConfig(port="/dev/ttyACM1", use_degrees=True)
+config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
