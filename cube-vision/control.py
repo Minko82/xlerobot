@@ -22,7 +22,7 @@ RS_JOINT_KEYS = {"head_pan_joint": 0.0, "head_tilt_joint": 0.0}
 arm_frame_x, arm_frame_y, arm_frame_z = frame_transform.camera_xyz_to_base_xyz(
     centroid[0], centroid[1], centroid[2], RS_JOINT_KEYS
 )
-
+print([arm_frame_x, arm_frame_y, arm_frame_z])
 ik_solve = IK_SO101()
 
 dt = 0.01
