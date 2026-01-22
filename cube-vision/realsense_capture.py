@@ -42,6 +42,10 @@ if not depth_frame or not color_frame:
 depth_image = np.asanyarray(depth_frame.get_data())   # uint16
 color_image = np.asanyarray(color_frame.get_data())   # uint8 BGR
 
+# Flip images vertically (camera is mounted upside down)
+depth_image = np.flipud(depth_image)
+color_image = np.flipud(color_image)
+
 # Save color
 cv2.imwrite(str(out_dir / "color.png"), color_image)
 

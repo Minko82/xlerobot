@@ -6,7 +6,7 @@ from frame_transform import frame_transform
 import time
 
 # Connect to robot
-config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
+config = SO100FollowerConfig(port="/dev/tty.usbmodem5A680135181", use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
@@ -14,10 +14,13 @@ robot.connect()
 point_cloud = PointCloud()
 point_cloud.create_point_cloud_from_rgbd()
 point_cloud.segment_plane()
-location_rs_frame = point_cloud.dbscan_objects()
+objects = point_cloud.dbscan_objects()
+if not objects:
+    raise RuntimeError("No objects detected in point cloud")
+centroid = objects[0]["centroid"]
 RS_JOINT_KEYS = {"head_pan_joint": 0.0, "head_tilt_joint": 0.0}
 arm_frame_x, arm_frame_y, arm_frame_z = frame_transform.camera_xyz_to_base_xyz(
-    location_rs_frame[0], location_rs_frame[1], location_rs_frame[2], RS_JOINT_KEYS
+    centroid[0], centroid[1], centroid[2], RS_JOINT_KEYS
 )
 
 ik_solve = IK_SO101()
