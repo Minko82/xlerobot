@@ -13,7 +13,7 @@ It is an evolution of the [XLeRobot](https://xlerobot.readthedocs.io/en/latest/s
 <br>
 
 <p align="center">
-  <a href="https://minko82.github.io/xlerobot-pro-web/">
+  <a href="https://minko82.github.io/xlerobot-pro-website/">
     <img src="https://img.shields.io/badge/Project_Website-008080?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Project Website">
   </a>
   <a href="https://arxiv.org/abs/2603.09051">
