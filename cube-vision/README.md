@@ -14,8 +14,12 @@ RealSense capture ─▶ color_detect ─▶ frame_transform ─▶ ik_solver �
 ## Quick start
 
 ```bash
-# Validate everything without hardware (needs pinocchio, pink, numpy):
-python test_offline.py
+# From the repo root, after the base install (docs/setup.md):
+pip install -r cube-vision/requirements.txt
+
+# Validate everything without hardware:
+cd cube-vision
+python test_offline.py    # expected: 49/49 passed
 
 # Live grasp demo (RealSense + one SO-101 arm on /dev/ttyACM0):
 python control_cube.py

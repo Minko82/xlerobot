@@ -39,9 +39,9 @@ pip install -r requirements-macos.txt    # macOS (arm64)
 
 Extra dependencies for specific components:
 
-- **Vision pipeline (`cube-vision/`):** `pyrealsense2` (installed via `.[all]`
-  through the `intelrealsense` extra), and `open3d` for the point-cloud
-  visualizers: `pip install open3d`.
+- **Vision pipeline (`cube-vision/`):** `pip install -r cube-vision/requirements.txt`
+  (pinocchio, pink + quadprog for IK, MuJoCo, RealSense, and the optional
+  visualizers).
 - **VR teleoperation:** requires the XLeVR/TeleVuer stack; see the
   [XLeRobot VR documentation](https://xlerobot.readthedocs.io/en/latest/software/getting_started/teleop_vr.html).
 
@@ -103,8 +103,10 @@ The `cube-vision/` directory contains the RealSense-based perception →
 frame-transform → IK pipeline. Validate it offline first:
 
 ```bash
+pip install -r cube-vision/requirements.txt
+
 cd cube-vision
-python test_offline.py            # full pipeline, no hardware needed
+python test_offline.py            # full pipeline, no hardware needed (49/49 tests)
 python control_cube.py            # live: detect a cube and grasp it
 ```
 
@@ -123,9 +125,9 @@ See `cube-vision/README.md` for the module layout and each script's purpose.
 
 ## Troubleshooting
 
-| Symptom | Fix |
-| --- | --- |
-| `Permission denied: /dev/ttyACM0` | Section 3 above |
-| Motor not found on bus | Re-check IDs (section 4) and that only one bus terminator is powered |
-| `ModuleNotFoundError: lerobot` | Activate the environment and re-run `pip install -e ".[all]"` |
-| RealSense frames time out | Replug USB 3.0 cable; check `rs-enumerate-devices` |
+| Symptom                           | Fix                                                                  |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `Permission denied: /dev/ttyACM0` | Section 3 above                                                      |
+| Motor not found on bus            | Re-check IDs (section 4) and that only one bus terminator is powered |
+| `ModuleNotFoundError: lerobot`    | Activate the environment and re-run `pip install -e ".[all]"`        |
+| RealSense frames time out         | Replug USB 3.0 cable; check `rs-enumerate-devices`                   |
