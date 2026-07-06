@@ -41,8 +41,32 @@ It is an evolution of the [XLeRobot](https://xlerobot.readthedocs.io/en/latest/s
 
 To get started with the XLeRobot-Pro, follow the instructions below:
 
-- **Hardware Build:** For detailed assembly instructions, parts lists, and 3D-printing guides, visit our [Project Website](https://minko82.github.io/xlerobot-pro-website/).
-- **Software Setup:** For the full software stack installation, ROS2 configuration, and autonomy setup, see the `/docs/setup.md` file in this repository.
+- **Hardware Build:** For detailed assembly instructions, parts lists, and 3D-printing guides, follow the [Build Guide](https://minko82.github.io/xlerobot-pro-website/build-guide.html) on the project website.
+- **Software Setup:** For installation, serial port setup, motor ID assignment, calibration, and validation, see [docs/setup.md](docs/setup.md).
+
+```bash
+git clone https://github.com/Minko82/xlerobot-pro.git
+cd xlerobot-pro
+pip install -e ".[all]"
+make smoke   # verify the install — no hardware needed
+```
+
+<br>
+
+---
+
+## Repository Layout
+
+| Path                                    | Contents                                                                         |
+| --------------------------------------- | -------------------------------------------------------------------------------- |
+| [`docs/setup.md`](docs/setup.md)        | Software setup and bring-up guide                                                |
+| [`src/lerobot/`](src/lerobot/)          | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
+| [`examples/`](examples/README.md)       | Tested bring-up and teleoperation examples (keyboard, Xbox, VR)                  |
+| [`cube-vision/`](cube-vision/README.md) | Autonomous perception + IK cube-manipulation pipeline                            |
+| [`calibration/`](calibration/)          | Reference motor calibrations for the two arms                                    |
+| [`scripts/`](scripts/README.md)         | Utilities (Tri-Bus power-budget calculator)                                      |
+| [`set_motor_id.py`](set_motor_id.py)    | Motor ID assignment tool used during the hardware build                          |
+| [`tests/`](tests/)                      | Hardware-free smoke tests (`make smoke`)                                         |
 
 <br>
 
