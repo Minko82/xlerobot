@@ -59,12 +59,13 @@ lerobot-record \
 
 import logging
 import time
-import numpy as np
-import torch
+from collections import deque
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from pprint import pformat
-from collections import deque
+
+import numpy as np
+import torch
 
 from lerobot.cameras import (  # noqa: F401
     CameraConfig,  # noqa: F401
@@ -118,18 +119,37 @@ from lerobot.utils.utils import (
 )
 from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
 
-GLOBAL_BACK_GOAL = np.array([-99.1578, -67.1670, 21.1723, 99.1829, 5.7592, 0.8043, 99.8230, -67.0739, 21.0242, 99.1322, -0.6326, 0.4778])
-GLOBAL_OPEN_GOAL = np.array([-99.1578, -67.1670, 21.1723, 99.1829, 5.7592, 36, 99.8230, -67.0739, 21.0242, 99.1322, -0.6326, 36])
+GLOBAL_BACK_GOAL = np.array(
+    [
+        -99.1578,
+        -67.1670,
+        21.1723,
+        99.1829,
+        5.7592,
+        0.8043,
+        99.8230,
+        -67.0739,
+        21.0242,
+        99.1322,
+        -0.6326,
+        0.4778,
+    ]
+)
+GLOBAL_OPEN_GOAL = np.array(
+    [-99.1578, -67.1670, 21.1723, 99.1829, 5.7592, 36, 99.8230, -67.0739, 21.0242, 99.1322, -0.6326, 36]
+)
+
+
 def reset_follower_position(robot, target_position, steps=50, delay=0.015, start_position=None):
     """
     Move the robot smoothly to the target position and generate a recordable action sequence.
-    
+
     Args:
         robot: The robot object (must have attributes bus1 and bus2).
         target_position: Target position array [left_arm_joints..., right_arm_joints...].
         steps: Number of trajectory steps (default: 150).
         delay: Delay time per step in milliseconds (default: 15 ms).
-    
+
     Returns:
         list: The action sequence, where each element is an action dictionary.
     """
@@ -148,68 +168,69 @@ def reset_follower_position(robot, target_position, steps=50, delay=0.015, start
         )
 
     left_target_position, right_target_position = target_position[0:6], target_position[6:12]
-    
+
     if start_position is None:
         left_trajectory = torch.from_numpy(
-            np.linspace(left_current_position, np.concatenate((left_target_position, left_current_position[-2:])), steps)
+            np.linspace(
+                left_current_position,
+                np.concatenate((left_target_position, left_current_position[-2:])),
+                steps,
+            )
         )
         right_trajectory = torch.from_numpy(
             np.linspace(right_current_position[:-3], right_target_position, steps)
         )
     else:
-        left_trajectory = torch.from_numpy(
-            np.linspace(left_current_position, left_target_position, steps)
-        )
-        right_trajectory = torch.from_numpy(
-            np.linspace(right_current_position, right_target_position, steps)
-        )
-    
+        left_trajectory = torch.from_numpy(np.linspace(left_current_position, left_target_position, steps))
+        right_trajectory = torch.from_numpy(np.linspace(right_current_position, right_target_position, steps))
+
     # generate action sequence
     action_sequence = []
     left_current_position_dict = {f"{k}.pos" for k in left_current_position_dict}
     left_current_position_dict = [
-        'left_arm_shoulder_pan.pos',
-        'left_arm_shoulder_lift.pos',
-        'left_arm_elbow_flex.pos',
-        'left_arm_wrist_flex.pos',
-        'left_arm_wrist_roll.pos',
-        'left_arm_gripper.pos',
+        "left_arm_shoulder_pan.pos",
+        "left_arm_shoulder_lift.pos",
+        "left_arm_elbow_flex.pos",
+        "left_arm_wrist_flex.pos",
+        "left_arm_wrist_roll.pos",
+        "left_arm_gripper.pos",
     ]
     right_current_position_dict = [
-        'right_arm_shoulder_pan.pos',
-        'right_arm_shoulder_lift.pos',
-        'right_arm_elbow_flex.pos',
-        'right_arm_wrist_flex.pos',
-        'right_arm_wrist_roll.pos',
-        'right_arm_gripper.pos'
+        "right_arm_shoulder_pan.pos",
+        "right_arm_shoulder_lift.pos",
+        "right_arm_elbow_flex.pos",
+        "right_arm_wrist_flex.pos",
+        "right_arm_wrist_roll.pos",
+        "right_arm_gripper.pos",
     ]
     if start_position is None:
-        left_current_position_dict += ['head_motor_1.pos', 'head_motor_2.pos']
-    for left_pose, right_pose in zip(left_trajectory, right_trajectory):
+        left_current_position_dict += ["head_motor_1.pos", "head_motor_2.pos"]
+    for left_pose, right_pose in zip(left_trajectory, right_trajectory, strict=False):
         left_action_dict = dict(zip(left_current_position_dict, left_pose, strict=False))
         right_action_dict = dict(zip(right_current_position_dict, right_pose, strict=False))
         if start_position is None:
             head_motor_dict = {}
         else:
             head_motor_dict = {
-                'head_motor_1.pos': 8.982,
-                'head_motor_2.pos': 28.8703,
+                "head_motor_1.pos": 8.982,
+                "head_motor_2.pos": 28.8703,
             }
         base_action_dict = {
             "x.vel": 0,
             "y.vel": 0,
             "theta.vel": 0,
         }
-        
+
         action_dict = {**left_action_dict, **head_motor_dict, **right_action_dict, **base_action_dict}
         action_sequence.append(action_dict)
-    
+
     return action_sequence
+
 
 def queue_reset_actions(action_queue, robot, target_position, steps=50, start_position=None):
     """
     Add a reset action sequence to the queue.
-    
+
     Args:
         action_queue: The action queue.
         robot: The robot object.
@@ -352,7 +373,6 @@ def record_loop(
         current_events = teleop.get_vr_events()
         events.update(current_events)
 
-
         if events["exit_early"]:
             events["exit_early"] = False
             log_say("Exit early")
@@ -367,11 +387,11 @@ def record_loop(
 
         if policy is not None or dataset is not None:
             observation_frame = build_dataset_frame(dataset.features, observation, prefix="observation")
-        
+
         # if queue not None, use the action
         if action_queue:
             action = action_queue.popleft()
-            if action == {}: # flag for the reset
+            if action == {}:  # flag for the reset
                 action = teleop.move_to_zero_position(robot)
 
         elif policy is not None:
@@ -410,20 +430,24 @@ def record_loop(
             logging.info("Rest to the zero position of robot")
             log_say("Reset position")
             action = teleop.move_to_zero_position(robot)
-            teleop.vr_event_handler.events['reset_position'] = False
-            events["reset_position"] = False 
+            teleop.vr_event_handler.events["reset_position"] = False
+            events["reset_position"] = False
         elif events["back_position"]:
-            logging.info("Back to the backet position of robot")
-            log_say("Back backet position")
-            if len(action_queue) < 10:  
+            logging.info("Back to the basket position of robot")
+            log_say("Back basket position")
+            if len(action_queue) < 10:
                 # Place in back and reset
                 queue_reset_actions(action_queue, robot, GLOBAL_BACK_GOAL, steps=30)
-                queue_reset_actions(action_queue, robot, GLOBAL_OPEN_GOAL, steps=10, start_position=GLOBAL_BACK_GOAL)
-                queue_reset_actions(action_queue, robot, np.zeros(12), steps=30, start_position=GLOBAL_OPEN_GOAL)
-                action_queue.append({}) # reset to zero flag
-            teleop.vr_event_handler.events['back_position'] = False
+                queue_reset_actions(
+                    action_queue, robot, GLOBAL_OPEN_GOAL, steps=10, start_position=GLOBAL_BACK_GOAL
+                )
+                queue_reset_actions(
+                    action_queue, robot, np.zeros(12), steps=30, start_position=GLOBAL_OPEN_GOAL
+                )
+                action_queue.append({})  # reset to zero flag
+            teleop.vr_event_handler.events["back_position"] = False
             events["back_position"] = False  # reset event state
-            
+
         sent_action = robot.send_action(action)
 
         if dataset is not None:
@@ -490,7 +514,7 @@ def record(cfg: RecordConfig) -> LeRobotDataset:
         teleop.connect(robot=robot)
         teleop.send_feedback()
 
-    # Select acording teleoperator
+    # Select according teleoperator
     if isinstance(teleop, XLerobotVRTeleop):
         # Use VR listener
         listener, events = init_vr_listener(teleop)
@@ -538,7 +562,7 @@ def record(cfg: RecordConfig) -> LeRobotDataset:
                 log_say("Delete Again record", cfg.play_sounds)
                 events["rerecord_episode"] = False
                 events["exit_early"] = False
-                teleop.vr_event_handler.events['rerecord_episode'] = False
+                teleop.vr_event_handler.events["rerecord_episode"] = False
 
                 dataset.clear_episode_buffer()
                 time.sleep(10)

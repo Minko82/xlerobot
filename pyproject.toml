@@ -17,16 +17,18 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project.urls]
-homepage = "https://huggingface.co/lerobot"
-documentation = "https://huggingface.co/docs/lerobot/index"
-source = "https://github.com/huggingface/lerobot"
-issues = "https://github.com/huggingface/lerobot/issues"
-discord = "https://discord.gg/s3KuuzsPFb"
+homepage = "https://minko82.github.io/xlerobot-pro-website/"
+documentation = "https://minko82.github.io/xlerobot-pro-website/build-guide.html"
+source = "https://github.com/Minko82/xlerobot-pro"
+issues = "https://github.com/Minko82/xlerobot-pro/issues"
 
 [project]
+# The distribution keeps the upstream name "lerobot" so that
+# `import lerobot` and `importlib.metadata.version("lerobot")` keep working
+# with this vendored fork.
 name = "lerobot"
 version = "0.4.1"
-description = "🤗 LeRobot: State-of-the-art Machine Learning for Real-World Robotics in Pytorch"
+description = "XLeRobot-Pro: an accessible bimanual mobile manipulator, built on a vendored fork of LeRobot"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
@@ -54,7 +56,7 @@ classifiers = [
     "Topic :: Software Development :: Build Tools",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-keywords = ["lerobot", "huggingface", "robotics",  "machine learning", "artificial intelligence"]
+keywords = ["xlerobot", "lerobot", "robotics", "bimanual manipulation", "machine learning"]
 
 dependencies = [
 
@@ -193,7 +195,7 @@ where = ["src"]
 [tool.ruff]
 target-version = "py310"
 line-length = 110
-exclude = ["tests/artifacts/**/*.safetensors", "*_pb2.py", "*_pb2_grpc.py"]
+exclude = ["*_pb2.py", "*_pb2_grpc.py", "cube-vision", "examples"]
 
 [tool.ruff.lint]
 # E, W: pycodestyle errors and warnings

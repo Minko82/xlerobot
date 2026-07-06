@@ -14,9 +14,7 @@
 
 from dataclasses import dataclass, field
 
-from lerobot.cameras.configs import CameraConfig, Cv2Rotation, ColorMode
-from lerobot.cameras.opencv.configuration_opencv import OpenCVCameraConfig
-from lerobot.cameras.realsense import RealSenseCamera, RealSenseCameraConfig
+from lerobot.cameras.configs import CameraConfig
 
 from ..config import RobotConfig
 
@@ -26,15 +24,12 @@ def xlerobot_cameras_config() -> dict[str, CameraConfig]:
         # "left_wrist": OpenCVCameraConfig(
         #     index_or_path="/dev/video0", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
         # ),
-
         # "right_wrist": OpenCVCameraConfig(
         #     index_or_path="/dev/video2", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
-        # ),  
-
+        # ),
         # "head(RGDB)": OpenCVCameraConfig(
         #     index_or_path="/dev/video2", fps=30, width=640, height=480, rotation=Cv2Rotation.NO_ROTATION
-        # ),                     
-        
+        # ),
         # "head": RealSenseCameraConfig(
         #     serial_number_or_name="125322060037",  # Replace with camera SN
         #     fps=30,
@@ -57,7 +52,7 @@ class XLerobotConfig(RobotConfig):
     """
 
     port1: str = "/dev/xle_right"  # Bus 1: left arm (1-6) + head (7-8)
-    port2: str = "/dev/xle_left"   # Bus 2: right arm (1-6) + base wheels (7-9)
+    port2: str = "/dev/xle_left"  # Bus 2: right arm (1-6) + base wheels (7-9)
     disable_torque_on_disconnect: bool = True
 
     # `max_relative_target` limits the magnitude of the relative positional target vector for safety purposes.
@@ -88,7 +83,6 @@ class XLerobotConfig(RobotConfig):
     )
 
 
-
 @dataclass
 class XLerobotHostConfig:
     # Network Configuration
@@ -103,6 +97,7 @@ class XLerobotHostConfig:
 
     # If robot jitters decrease the frequency and monitor cpu load with `top` in cmd
     max_loop_freq_hz: int = 30
+
 
 @RobotConfig.register_subclass("xlerobot_client")
 @dataclass
@@ -144,8 +139,8 @@ class XLerobotNewWiringConfig(RobotConfig):
     Bus 2 (port2): Motors 1-2 = head, Motors 3-5 = base wheels
     """
 
-    port1: str = "/dev/xle_arms"   # Bus 1: left arm (1-6) + right arm (7-12)
-    port2: str = "/dev/xle_head"   # Bus 2: head (1-2) + base wheels (3-5)
+    port1: str = "/dev/xle_arms"  # Bus 1: left arm (1-6) + right arm (7-12)
+    port2: str = "/dev/xle_head"  # Bus 2: head (1-2) + base wheels (3-5)
     disable_torque_on_disconnect: bool = True
 
     max_relative_target: int | None = None

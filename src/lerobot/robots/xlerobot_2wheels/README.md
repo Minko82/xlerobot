@@ -5,26 +5,30 @@ This is a modified version of XLeRobot that uses a 2-wheel differential drive ba
 ## Key Changes from Original XLeRobot
 
 ### Hardware Changes
+
 - **Wheels**: Reduced from 3 omni wheels to 2 differential drive wheels
-- **Motor IDs**: 
+- **Motor IDs**:
   - Left wheel: Motor ID 9
   - Right wheel: Motor ID 10
   - Removed: Back wheel (previously Motor ID 8)
 
 ### Kinematics Changes
+
 - **Movement**: Only supports forward/backward (x) and rotation (θ)
 - **No lateral movement**: Cannot move sideways (y) like the omni wheel version
 - **Differential drive equations**:
-  - Left wheel speed = (v - ω*L/2) / r
-  - Right wheel speed = (v + ω*L/2) / r
+  - Left wheel speed = (v - ω\*L/2) / r
+  - Right wheel speed = (v + ω\*L/2) / r
   - Where v = linear velocity, ω = angular velocity, L = wheelbase, r = wheel radius
 
 ### Configuration Parameters
+
 - `wheel_radius`: 0.05 meters (default)
 - `wheelbase`: 0.25 meters (default)
 - These can be adjusted in the config files
 
 ### Control Interface
+
 - **Forward/Backward**: 'i'/'k' keys
 - **Rotate Left/Right**: 'u'/'o' keys
 - **Speed Control**: 'n'/'m' keys (3 speed levels)
@@ -33,16 +37,19 @@ This is a modified version of XLeRobot that uses a 2-wheel differential drive ba
 ## Usage
 
 ### Running the Host (on robot hardware)
+
 ```bash
 PYTHONPATH=src python -m lerobot.robots.xlerobot_2wheels.xlerobot_2wheels_host --robot.id=my_xlerobot_2wheels
 ```
 
 ### Running the Teleop Client
+
 ```bash
 PYTHONPATH=src python -m examples.xlerobot_2wheels.teleoperate_Keyboard
 ```
 
 ### Direct Connection (no ZMQ)
+
 ```python
 from lerobot.robots.xlerobot_2wheels import XLerobot2Wheels, XLerobot2WheelsConfig
 
@@ -63,7 +70,7 @@ robot.connect()
 
 1. **State Features**: Removed `y.vel` from state features (only `x.vel` and `theta.vel`)
 2. **Motor Configuration**: Only 2 base motors instead of 3
-3. **Kinematics Functions**: 
+3. **Kinematics Functions**:
    - `_body_to_wheel_raw()`: Implements differential drive forward kinematics
    - `_wheel_raw_to_body()`: Implements differential drive inverse kinematics
 4. **Control Interface**: Simplified to only support differential drive movements

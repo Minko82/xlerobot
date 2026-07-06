@@ -5,10 +5,10 @@ Connects to a motor on the given port, scans all baudrates to find it,
 and reprograms it with the specified ID at the default baudrate (1 MHz).
 
 Usage:
-    python examples/set_motor_id.py --port /dev/tty.usbmodem... --id 3
+    python set_motor_id.py --port /dev/tty.usbmodem... --id 3
 
     # For a non-sts3215 motor:
-    python examples/set_motor_id.py --port /dev/tty.usbmodem... --id 3 --model scs0009
+    python set_motor_id.py --port /dev/tty.usbmodem... --id 3 --model scs0009
 
 Make sure only ONE motor is connected when running this.
 """

@@ -76,7 +76,10 @@ def calibrate_bus1(robot: XLerobot):
         )
 
     bus.write_calibration(calibration_bus1)
-    robot.calibration = {**{k: v for k, v in robot.calibration.items() if k not in bus.motors}, **calibration_bus1}
+    robot.calibration = {
+        **{k: v for k, v in robot.calibration.items() if k not in bus.motors},
+        **calibration_bus1,
+    }
     robot._save_calibration()
     print("Calibration saved to", robot.calibration_fpath)
 
@@ -141,7 +144,7 @@ def step_response_test(robot: XLerobot, step_steps: int, hold_time: float):
         time.sleep(hold_time)
         print()
 
-    print("Present_Load after step resposne test:")
+    print("Present_Load after step response test:")
     loads = bus.sync_read("Present_Load", motors)
     for name, load in loads.items():
         print(f"    {name:16s} load = {load}")

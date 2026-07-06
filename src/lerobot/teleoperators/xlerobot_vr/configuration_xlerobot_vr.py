@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Optional
 
 from ..config import TeleoperatorConfig
 
@@ -23,14 +22,11 @@ from ..config import TeleoperatorConfig
 @TeleoperatorConfig.register_subclass("xlerobot_vr")
 @dataclass
 class XLerobotVRTeleopConfig(TeleoperatorConfig):
-
-    
-    # VR sysytem setting
+    # VR system setting
     vr_enabled: bool = True
-    vr_connection_timeout: float = 10.0 
-    vr_data_timeout: float = 5.0  
+    vr_connection_timeout: float = 10.0
+    vr_data_timeout: float = 5.0
 
-    kp : float = 1.0 
-    
+    kp: float = 1.0
 
-    xlevr_path: Optional[str] = "/your_local_DIR/XLeRobot/XLeVR" # need to be modified
+    xlevr_path: str | None = "/your_local_DIR/XLeRobot/XLeVR"  # need to be modified

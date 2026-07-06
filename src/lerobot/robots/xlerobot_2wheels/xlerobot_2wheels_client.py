@@ -18,7 +18,7 @@ import base64
 import json
 import logging
 from functools import cached_property
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -27,7 +27,7 @@ import zmq
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 
 from ..robot import Robot
-from .config_xlerobot_2wheels import XLerobot2WheelsConfig, XLerobot2WheelsClientConfig
+from .config_xlerobot_2wheels import XLerobot2WheelsClientConfig
 
 
 class XLerobot2WheelsClient(Robot):
@@ -90,7 +90,7 @@ class XLerobot2WheelsClient(Robot):
             ),
             float,
         )
-        
+
     @cached_property
     def _state_order(self) -> tuple[str, ...]:
         return tuple(self._state_ft.keys())
@@ -145,7 +145,7 @@ class XLerobot2WheelsClient(Robot):
     def calibrate(self) -> None:
         pass
 
-    def _poll_and_get_latest_message(self) -> Optional[str]:
+    def _poll_and_get_latest_message(self) -> str | None:
         """Polls the ZMQ socket for a limited time and returns the latest message string."""
         poller = zmq.Poller()
         poller.register(self.zmq_observation_socket, zmq.POLLIN)
@@ -173,7 +173,7 @@ class XLerobot2WheelsClient(Robot):
 
         return last_msg
 
-    def _parse_observation_json(self, obs_string: str) -> Optional[Dict[str, Any]]:
+    def _parse_observation_json(self, obs_string: str) -> dict[str, Any] | None:
         """Parses the JSON observation string."""
         try:
             return json.loads(obs_string)
@@ -181,7 +181,7 @@ class XLerobot2WheelsClient(Robot):
             logging.error(f"Error decoding JSON observation: {e}")
             return None
 
-    def _decode_image_from_b64(self, image_b64: str) -> Optional[np.ndarray]:
+    def _decode_image_from_b64(self, image_b64: str) -> np.ndarray | None:
         """Decodes a base64 encoded image string to an OpenCV image."""
         if not image_b64:
             return None
@@ -197,18 +197,18 @@ class XLerobot2WheelsClient(Robot):
             return None
 
     def _remote_state_from_obs(
-        self, observation: Dict[str, Any]
-    ) -> Tuple[Dict[str, np.ndarray], Dict[str, Any]]:
+        self, observation: dict[str, Any]
+    ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
         """Extracts frames, and state from the parsed observation."""
 
         flat_state = {key: observation.get(key, 0.0) for key in self._state_order}
 
         state_vec = np.array([flat_state[key] for key in self._state_order], dtype=np.float32)
 
-        obs_dict: Dict[str, Any] = {**flat_state, "observation.state": state_vec}
+        obs_dict: dict[str, Any] = {**flat_state, "observation.state": state_vec}
 
         # Decode images
-        current_frames: Dict[str, np.ndarray] = {}
+        current_frames: dict[str, np.ndarray] = {}
         for cam_name, image_b64 in observation.items():
             if cam_name not in self._cameras_ft:
                 continue
@@ -218,7 +218,7 @@ class XLerobot2WheelsClient(Robot):
 
         return current_frames, obs_dict
 
-    def _get_data(self) -> Tuple[Dict[str, np.ndarray], Dict[str, Any], Dict[str, Any]]:
+    def _get_data(self) -> tuple[dict[str, np.ndarray], dict[str, Any], dict[str, Any]]:
         """
         Polls the video socket for the latest observation data.
 
@@ -260,7 +260,9 @@ class XLerobot2WheelsClient(Robot):
         and a camera frame. Receives over ZMQ, translate to body-frame vel
         """
         if not self._is_connected:
-            raise DeviceNotConnectedError("XLerobot2WheelsClient is not connected. You need to run `robot.connect()`.")
+            raise DeviceNotConnectedError(
+                "XLerobot2WheelsClient is not connected. You need to run `robot.connect()`."
+            )
 
         frames, obs_dict = self._get_data()
 
@@ -294,9 +296,9 @@ class XLerobot2WheelsClient(Robot):
             theta_cmd += angular_speed
         if self.teleop_keys["rotate_right"] in pressed_keys:
             theta_cmd -= angular_speed
-            
+
         return {
-            "x.vel": x_cmd, 
+            "x.vel": x_cmd,
             "theta.vel": theta_cmd,
         }
 

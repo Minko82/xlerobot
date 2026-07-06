@@ -29,12 +29,12 @@ from typing import Any
 import numpy as np
 
 from lerobot.cameras.utils import make_cameras_from_configs
-from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 from lerobot.motors.feetech import (
     FeetechMotorsBus,
     OperatingMode,
 )
+from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
 
 from ..robot import Robot
 from ..utils import ensure_safe_goal_position
@@ -182,8 +182,10 @@ class XLerobotNewWiring(Robot):
 
     @property
     def is_connected(self) -> bool:
-        return self.bus1.is_connected and self.bus2.is_connected and all(
-            cam.is_connected for cam in self.cameras.values()
+        return (
+            self.bus1.is_connected
+            and self.bus2.is_connected
+            and all(cam.is_connected for cam in self.cameras.values())
         )
 
     def connect(self, calibrate: bool = True) -> None:
@@ -197,17 +199,25 @@ class XLerobotNewWiring(Robot):
         if self.calibration_fpath.is_file():
             logger.info(f"Calibration file found at {self.calibration_fpath}")
             user_input = input(
-                f"Press ENTER to restore calibration from file, or type 'c' and press ENTER to run manual calibration: "
+                "Press ENTER to restore calibration from file, or type 'c' and press ENTER to run manual calibration: "
             )
             if user_input.strip().lower() != "c":
                 logger.info("Attempting to restore calibration from file...")
                 try:
-                    self.bus1.calibration = {k: v for k, v in self.calibration.items() if k in self.bus1.motors}
-                    self.bus2.calibration = {k: v for k, v in self.calibration.items() if k in self.bus2.motors}
+                    self.bus1.calibration = {
+                        k: v for k, v in self.calibration.items() if k in self.bus1.motors
+                    }
+                    self.bus2.calibration = {
+                        k: v for k, v in self.calibration.items() if k in self.bus2.motors
+                    }
                     logger.info("Calibration data loaded into bus memory successfully!")
 
-                    self.bus1.write_calibration({k: v for k, v in self.calibration.items() if k in self.bus1.motors})
-                    self.bus2.write_calibration({k: v for k, v in self.calibration.items() if k in self.bus2.motors})
+                    self.bus1.write_calibration(
+                        {k: v for k, v in self.calibration.items() if k in self.bus1.motors}
+                    )
+                    self.bus2.write_calibration(
+                        {k: v for k, v in self.calibration.items() if k in self.bus2.motors}
+                    )
                     logger.info("Calibration restored successfully from file!")
 
                 except Exception as e:
@@ -241,14 +251,12 @@ class XLerobotNewWiring(Robot):
         self.bus1.disable_torque()
         for name in arm_motors:
             self.bus1.write("Operating_Mode", name, OperatingMode.POSITION.value)
-        input(
-            "Move left arm and right arm motors to the middle of their range of motion and press ENTER...."
-        )
+        input("Move left arm and right arm motors to the middle of their range of motion and press ENTER....")
         homing_offsets = self.bus1.set_half_turn_homings(arm_motors)
         homing_offsets.update(dict.fromkeys(self.head_motors + self.base_motors, 0))
 
         print(
-            f"Move all left arm and right arm joints sequentially through their "
+            "Move all left arm and right arm joints sequentially through their "
             "entire ranges of motion.\nRecording positions. Press ENTER to stop..."
         )
         range_mins, range_maxes = self.bus1.record_ranges_of_motion(arm_motors)
@@ -270,18 +278,16 @@ class XLerobotNewWiring(Robot):
         for name in self.head_motors:
             self.bus2.write("Operating_Mode", name, OperatingMode.POSITION.value)
 
-        input(
-            "Move head motors to the middle of their range of motion and press ENTER...."
-        )
+        input("Move head motors to the middle of their range of motion and press ENTER....")
 
         homing_offsets_bus2 = self.bus2.set_half_turn_homings(self.head_motors)
         homing_offsets_bus2.update(dict.fromkeys(self.base_motors, 0))
 
         full_turn_motors = [motor for motor in self.base_motors if "wheel" in motor]
-        unknown_range_motors = [motor for motor in self.head_motors]
+        unknown_range_motors = list(self.head_motors)
 
         print(
-            f"Move all head joints sequentially through their "
+            "Move all head joints sequentially through their "
             "entire ranges of motion.\nRecording positions. Press ENTER to stop..."
         )
         range_mins_bus2, range_maxes_bus2 = self.bus2.record_ranges_of_motion(unknown_range_motors)

@@ -40,9 +40,9 @@ def test_website_referenced_scripts_exist():
 
 def test_all_python_compiles():
     for directory in ("src", "examples", "cube-vision"):
-        assert compileall.compile_dir(
-            str(REPO_ROOT / directory), quiet=2, force=True
-        ), f"Syntax errors under {directory}/"
+        assert compileall.compile_dir(str(REPO_ROOT / directory), quiet=2, force=True), (
+            f"Syntax errors under {directory}/"
+        )
 
 
 def test_calibration_files_are_valid_json():

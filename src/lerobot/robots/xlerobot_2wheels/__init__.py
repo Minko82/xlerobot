@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .config_xlerobot_2wheels import (
+    XLerobot2WheelsClientConfig,
+    XLerobot2WheelsConfig,
+    XLerobot2WheelsHostConfig,
+)
 from .xlerobot_2wheels import XLerobot2Wheels
 from .xlerobot_2wheels_client import XLerobot2WheelsClient
 from .xlerobot_2wheels_host import XLerobot2WheelsHost
-from .config_xlerobot_2wheels import (
-    XLerobot2WheelsConfig,
-    XLerobot2WheelsClientConfig,
-    XLerobot2WheelsHostConfig,
-)
 
 __all__ = [
     "XLerobot2Wheels",
-    "XLerobot2WheelsClient", 
+    "XLerobot2WheelsClient",
     "XLerobot2WheelsHost",
     "XLerobot2WheelsConfig",
     "XLerobot2WheelsClientConfig",
