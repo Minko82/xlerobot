@@ -1,6 +1,6 @@
 from pathlib import Path
 
-URDF_PATH = Path(__file__).resolve().parent.parent / "assets" / "xlerobot" / "xlerobot_front.urdf"
+URDF_PATH = Path(__file__).resolve().parent.parent / "frame_transform" / "xlerobot" / "xlerobot_front.urdf"
 
 BASE_FRAME = "Base"
 CAMERA_FRAME = "head_camera_rgb_optical_frame"

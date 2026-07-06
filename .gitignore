@@ -172,3 +172,8 @@ data/
 
 # Dev folders
 .cache/*
+
+# Generated runtime artifacts
+cube-vision/outputs/
+cube-vision/pincer_transform/outputs/
+MUJOCO_LOG.TXT
