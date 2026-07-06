@@ -172,6 +172,7 @@ all = [
 ]
 
 [project.scripts]
+xlerobot-vision-calibrate="xlerobot_vision.calibration:main"
 xlerobot-power-experiments="lerobot.scripts.xlerobot_power_experiments:main"
 lerobot-calibrate="lerobot.scripts.lerobot_calibrate:main"
 lerobot-find-cameras="lerobot.scripts.lerobot_find_cameras:main"
@@ -192,10 +193,19 @@ lerobot-edit-dataset="lerobot.scripts.lerobot_edit_dataset:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+xlerobot_vision = [
+    "assets/xlerobot/*.xml",
+    "assets/xlerobot/*.urdf",
+    "assets/xlerobot/*.srdf",
+    "assets/xlerobot/assets/*",
+    "assets/xlerobot/meshes/*",
+]
+
 [tool.ruff]
 target-version = "py310"
 line-length = 110
-exclude = ["*_pb2.py", "*_pb2_grpc.py", "cube-vision", "examples"]
+exclude = ["*_pb2.py", "*_pb2_grpc.py", "diagnostics", "examples"]
 
 [tool.ruff.lint]
 # E, W: pycodestyle errors and warnings
@@ -224,10 +234,12 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
+# Robotics/math notation (R, T, oMf, IK_SO101) follows pinocchio conventions.
+"src/xlerobot_vision/**" = ["N801", "N803", "N806"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["lerobot"]
+known-first-party = ["lerobot", "xlerobot_vision"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

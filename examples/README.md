@@ -31,11 +31,18 @@ python3 0_so100_keyboard_joint_control.py
 - **`2_dual_so100_keyboard_ee_control.py`** → dual-arm, joint + end-effector control.
 - **`9_dual_wrist_camera.py`** → dual wrist camera verification.
 
-## Other examples
+## Teleoperation
 
 - **`5_xlerobot_teleop_xbox.py`** / **`5_xlerobot_teleop_xbox_new_wiring.py`** → full-robot Xbox-controller teleoperation (the `new_wiring` variant matches the Tri-Bus wiring from the Build Guide).
 - **`teleop_hand_and_arm.py`** → VR hand-tracking teleoperation (requires the XLeVR/TeleVuer stack).
-- **`smolvla_policy_control.py`**, **`diffusion_policy_control.py`**, **`serve_policy.py`** → running trained policies on the robot.
-- **`so100_precision_test.py`** → repeatability measurement (results in `precision_test_results.csv`).
+- **`pygame_test.py`** → verify a game controller is detected before running Xbox teleop.
 
-- Additional, unverified examples live in `examples/provided_examples/`; they are upstream references and may require updates to work with XLeRobot-Pro.
+## Subdirectories
+
+- **[`vision/`](vision/README.md)** → autonomous perception + IK demos (cube grasping and scripted motions).
+- **`policies/`** → running trained policies on the robot (`smolvla_policy_control.py`, `diffusion_policy_control.py`, `serve_policy.py`).
+- **`provided_examples/`** → additional, unverified upstream references; may require updates to work with XLeRobot-Pro.
+
+## Benchmarks
+
+- **`so100_precision_test.py`** → repeatability measurement (results in `precision_test_results.csv`).

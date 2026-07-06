@@ -57,16 +57,17 @@ make smoke   # verify the install — no hardware needed
 
 ## Repository Layout
 
-| Path                                    | Contents                                                                         |
-| --------------------------------------- | -------------------------------------------------------------------------------- |
-| [`docs/setup.md`](docs/setup.md)        | Software setup and bring-up guide                                                |
-| [`src/lerobot/`](src/lerobot/)          | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
-| [`examples/`](examples/README.md)       | Tested bring-up and teleoperation examples (keyboard, Xbox, VR)                  |
-| [`cube-vision/`](cube-vision/README.md) | Autonomous perception + IK cube-manipulation pipeline                            |
-| [`calibration/`](calibration/)          | Reference motor calibrations for the two arms                                    |
-| [`scripts/`](scripts/README.md)         | Utilities (Tri-Bus power-budget calculator)                                      |
-| [`set_motor_id.py`](set_motor_id.py)    | Motor ID assignment tool used during the hardware build                          |
-| [`tests/`](tests/)                      | Hardware-free smoke tests (`make smoke`)                                         |
+| Path                                           | Contents                                                                         |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| [`docs/setup.md`](docs/setup.md)               | Software setup and bring-up guide                                                |
+| [`src/lerobot/`](src/lerobot/)                 | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
+| [`examples/`](examples/README.md)              | Bring-up, teleoperation, policy, and autonomous-vision examples                  |
+| [`src/xlerobot_vision/`](src/xlerobot_vision/) | Vision + IK library: perception, frame transforms, differential IK, robot model  |
+| [`diagnostics/`](diagnostics/README.md)        | Bus, motor, and frame-transform debugging tools                                  |
+| [`calibration/`](calibration/)                 | Reference motor calibrations for the two arms                                    |
+| [`scripts/`](scripts/README.md)                | Utilities (Tri-Bus power-budget calculator)                                      |
+| [`set_motor_id.py`](set_motor_id.py)           | Motor ID assignment tool used during the hardware build                          |
+| [`tests/`](tests/)                             | Hardware-free smoke tests (`make smoke`)                                         |
 
 <br>
 

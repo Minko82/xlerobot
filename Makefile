@@ -16,7 +16,7 @@ lint:
 
 # Hardware-free checks: syntax-compile the codebase and verify model assets.
 smoke:
-	$(PYTHON) -m compileall -q src examples cube-vision scripts set_motor_id.py
+	$(PYTHON) -m compileall -q src examples diagnostics scripts set_motor_id.py
 	$(PYTHON) -m pytest tests -q
 
 test: smoke

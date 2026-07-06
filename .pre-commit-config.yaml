@@ -15,9 +15,9 @@
 default_language_version:
     python: python3.10
 
-# Research/bring-up scripts (cube-vision, examples) and vendored model assets
-# are excluded from style enforcement; library code under src/ is fully linted.
-exclude: "^(cube-vision/|examples/)"
+# Bring-up/demo scripts (examples/, diagnostics/) are excluded from style
+# enforcement; library code under src/ is fully linted.
+exclude: "^(diagnostics/|examples/)"
 
 repos:
   ##### Meta #####

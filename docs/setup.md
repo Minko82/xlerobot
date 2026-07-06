@@ -39,7 +39,7 @@ pip install -r requirements-macos.txt    # macOS (arm64)
 
 Extra dependencies for specific components:
 
-- **Vision pipeline (`cube-vision/`):** `pip install -r cube-vision/requirements.txt`
+- **Vision + IK stack (`src/xlerobot_vision/`):** `pip install -r requirements-vision.txt`
   (pinocchio, pink + quadprog for IK, MuJoCo, RealSense, and the optional
   visualizers).
 - **VR teleoperation:** requires the XLeVR/TeleVuer stack; see the
@@ -84,7 +84,7 @@ lerobot-calibrate --robot.type=so101_follower --robot.port=/dev/ttyACM0 --robot.
 
 - LeRobot stores calibrations under `~/.cache/huggingface/lerobot/calibration/`.
 - Reference calibrations for this robot are versioned in `calibration/`
-  (`left_arm.json`, `right_arm.json`) and `cube-vision/calibration/`.
+  (`left_arm.json`, `right_arm.json`, `head.json`, `single_bus.json`).
 
 ## 6. Validate the build
 
@@ -99,18 +99,19 @@ python 9_dual_wrist_camera.py                       # wrist camera check
 
 ## 7. Autonomous cube manipulation (vision + IK)
 
-The `cube-vision/` directory contains the RealSense-based perception →
-frame-transform → IK pipeline. Validate it offline first:
+The `xlerobot_vision` library implements the RealSense-based perception →
+frame-transform → IK pipeline; `examples/vision/` contains the runnable demos.
+Validate the pipeline offline first:
 
 ```bash
-pip install -r cube-vision/requirements.txt
+pip install -r requirements-vision.txt
 
-cd cube-vision
-python test_offline.py            # full pipeline, no hardware needed (49/49 tests)
-python control_cube.py            # live: detect a cube and grasp it
+python tests/vision_offline_suite.py     # full pipeline, no hardware (49/49 tests)
+python examples/vision/grab_cube.py      # live: detect a cube and grasp it
 ```
 
-See `cube-vision/README.md` for the module layout and each script's purpose.
+See `examples/vision/README.md` for the demos and `diagnostics/README.md` for
+bus/motor/transform debugging tools.
 
 ## 8. Jetson notes
 
