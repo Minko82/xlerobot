@@ -1,4 +1,4 @@
-"""Camera-to-arm-base frame transform using pinocchio FK with xlerobot.xml (MJCF).
+"""Camera-to-arm-base frame transform using pinocchio FK with xlerobot.xml.
 
 The model is loaded once at import time and reused for every query.
 """
@@ -15,13 +15,13 @@ import pinocchio as pin
 # Model (loaded once)
 # ---------------------------------------------------------------------------
 
-_MJCF_PATH = Path(__file__).resolve().parent.parent / "assets" / "xlerobot.xml"
+_MJCF_PATH = Path(__file__).resolve().parent / "xlerobot" / "xlerobot.xml"
 
 _model = pin.buildModelFromMJCF(str(_MJCF_PATH))
 _data = _model.createData()
 
 # Frame IDs (resolved once)
-_BASE_FRAME_ID = _model.getFrameId("Base_2")
+_BASE_FRAME_ID = _model.getFrameId("Base")
 # NOTE: "head_camera_rgb_frame" has an optical-frame euler that makes its Z axis
 # align with the tilt rotation axis (Y), so tilt has no effect on its orientation
 # in pinocchio. Instead we use "head_camera_link" (which tilts correctly) and
@@ -29,32 +29,23 @@ _BASE_FRAME_ID = _model.getFrameId("Base_2")
 _CAMERA_LINK_FRAME_ID = _model.getFrameId("head_camera_link")
 
 # Rotation from camera_link frame to optical frame.
-# camera_link axes at neutral: X = forward (-X world), Y = right (-Y world), Z = up (+Z world)
+# camera_link axes at neutral: X = forward (-X world), Y = left (-Y world), Z = up (+Z world)
 # Optical convention: Z = forward, X = right, Y = down
-# So: optical_Z = link_X, optical_X = link_Y, optical_Y = -link_Z
-_R_LINK_TO_OPTICAL = np.array([
-    [0,  0, 1],   # optical X (right) = link Y ... column 0 = link coords of optical X
-    [1,  0, 0],   # wait, let me be precise
-    [0, -1, 0],
-])
 # Columns of R_link_to_optical are the optical axes expressed in link frame:
-#   col 0 (optical X = right):   link Y  = [0, 1, 0]
-#   col 1 (optical Y = down):   -link Z  = [0, 0, -1]
-#   col 2 (optical Z = forward): link X  = [1, 0, 0]
+#   col 0 (optical X = right):  -link Y  = [0, -1, 0]   (right = +Y world = -link Y)
+#   col 1 (optical Y = down):   -link Z  = [0,  0, -1]
+#   col 2 (optical Z = forward): link X  = [1,  0,  0]
 _R_LINK_TO_OPTICAL = np.array([
-    [0,  0, 1],
+    [ 0,  0, 1],
     [1,  0, 0],
-    [0, -1, 0],
+    [ 0, -1, 0],
 ])
 
-# Empirical correction between the MJCF camera chain and the arm Base frame.
-# The Rz(-90°) correction is the same for both Base and Base_2 because the
-# 180° frame rotation and the 180° change in raw output cancel out.
-_R_BASE_CORRECTION = np.array([
-    [0.0, 1.0, 0.0],   # x' = y
-    [-1.0, 0.0, 0.0],  # y' = -x
-    [0.0, 0.0, 1.0],   # z' = z
-])
+# No base correction needed: pinocchio FK computes the exact rigid transform
+# from camera optical frame to Base frame.  The IK solver's base_to_world()
+# uses the same pinocchio rotation, so the round-trip is exact:
+#   p_world = R_base @ (R_base^T @ (R_cam @ p + t_cam - t_base)) + t_base
+#           = R_cam @ p + t_cam
 
 # Joint indices for the head (resolved once)
 _HEAD_PAN_IDX = _model.joints[_model.getJointId("head_pan_joint")].idx_q
@@ -149,6 +140,5 @@ def camera_xyz_to_base_xyz(
 
     p_cam = np.array([x, y, z, 1.0], dtype=float)
     p_base = (T @ p_cam)[:3]
-    p_base = _R_BASE_CORRECTION @ p_base
 
     return float(p_base[0]), float(p_base[1]), float(p_base[2])
