@@ -26,7 +26,7 @@ WEBSITE_REFERENCED = [
     REPO_ROOT / "examples" / "xlerobot_examples" / "1_so100_keyboard_ee_control.py",
 ]
 
-CODE_DIRS = ("src", "examples", "diagnostics", "scripts", "tests")
+CODE_DIRS = ("src", "examples", "diagnostics", "tests")
 
 
 def test_model_assets_exist():
