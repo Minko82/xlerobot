@@ -1,0 +1,19 @@
+# Extra dependencies for the xlerobot_pro stack, on top of the base install
+# (pip install -e ".[all]" from the repo root).
+#
+#   pip install -r requirements/requirements-vision.txt
+#
+# Verified working combination (tests/vision_offline_suite.py: 49/49 pass).
+
+pin==3.4.0          # pinocchio (FK / model loading)
+pin-pink>=4.2.0     # differential IK
+quadprog>=0.1.13    # QP solver used by the IK loop (qpsolvers backend)
+mujoco>=3.3.7       # MJCF model loading / visualization
+matplotlib          # IK target plots (xlerobot_pro.viz)
+opencv-python       # color detection
+pyrealsense2; sys_platform != "darwin"        # RealSense capture
+pyrealsense2-macosx; sys_platform == "darwin"
+
+# Optional visualizers
+open3d              # point clouds (point_cloud.py, visualize_point_cloud.py)
+meshcat             # IK solver visualization

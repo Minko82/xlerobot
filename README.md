@@ -67,7 +67,7 @@ pip install torch torchvision --index-url https://pypi.jetson-ai-lab.dev/jp6/cu1
 
 ```bash
 pip install -e ".[all]"                  # robot stack (vendored LeRobot fork + extras)
-pip install -r requirements-vision.txt   # vision + IK stack (pinocchio, pink, MuJoCo, RealSense)
+pip install -r requirements/requirements-vision.txt   # vision + IK stack (pinocchio, pink, MuJoCo, RealSense)
 ```
 
 **4. Grant serial port access (one time)**
@@ -93,7 +93,7 @@ python examples/0_so100_keyboard_joint_control.py  # first motion test
 python examples/vision/grab_cube.py                # autonomous cube grasp demo
 ```
 
-For motor ID assignment, calibration, Jetson quirks (open3d/libgomp), and troubleshooting, see the full guide: **[docs/setup.md](docs/setup.md)**.
+For motor ID assignment, calibration, Jetson quirks (open3d/libgomp), and troubleshooting, see the **[Build Guide](https://minko82.github.io/xlerobot-pro-website/build-guide.html)**.
 
 <br>
 
@@ -103,13 +103,12 @@ For motor ID assignment, calibration, Jetson quirks (open3d/libgomp), and troubl
 
 | Path                                     | Contents                                                                         |
 | ---------------------------------------- | -------------------------------------------------------------------------------- |
-| [`docs/setup.md`](docs/setup.md)         | Software setup and bring-up guide                                                |
 | [`src/lerobot/`](src/lerobot/)           | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
 | [`examples/`](examples/README.md)        | Bring-up, teleoperation, policy, and autonomous-vision examples                  |
 | [`src/xlerobot_pro/`](src/xlerobot_pro/) | Vision + IK library, robot model, and system-wide firmware safety limits         |
 | [`diagnostics/`](diagnostics/README.md)  | Bus, motor, and frame-transform debugging tools                                  |
 | [`calibration/`](calibration/)           | Reference motor calibrations for the two arms                                    |
-| [`scripts/`](scripts/README.md)          | Utilities (Tri-Bus power-budget calculator)                                      |
+| [`requirements/`](requirements/)         | Base spec, platform lockfiles, and the vision dependency list                    |
 | [`set_motor_id.py`](set_motor_id.py)     | Motor ID assignment tool used during the hardware build                          |
 | [`tests/`](tests/)                       | Hardware-free smoke tests (`make smoke`)                                         |
 

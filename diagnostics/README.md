@@ -2,7 +2,7 @@
 
 Standalone tools for debugging the robot hardware and the vision/IK pipeline.
 All of them import from the `xlerobot_pro` and `lerobot` libraries, so run
-them from anywhere after the install in [docs/setup.md](../docs/setup.md).
+them from anywhere after the install in the [main README](../README.md#getting-started).
 Scripts default to the port in `xlerobot_pro.config.BUS_PORT`
 (`/dev/ttyACM0`, override with `XLEROBOT_BUS_PORT` or `--port` where offered).
 

@@ -23,7 +23,7 @@ REQUIRED_ASSETS = [
 WEBSITE_REFERENCED = [
     REPO_ROOT / "set_motor_id.py",
     REPO_ROOT / "examples" / "0_so100_keyboard_joint_control.py",
-    REPO_ROOT / "examples" / "provided_examples" / "1_so100_keyboard_ee_control.py",
+    REPO_ROOT / "examples" / "xlerobot_examples" / "1_so100_keyboard_ee_control.py",
 ]
 
 CODE_DIRS = ("src", "examples", "diagnostics", "scripts", "tests")

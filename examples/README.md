@@ -4,7 +4,7 @@ This folder contains a small set of **tested example scripts** to help you bring
 
 All examples assume:
 
-- You have installed the software stack ([docs/setup.md](../docs/setup.md)).
+- You have installed the software stack (see [Getting Started](../README.md#getting-started)).
 - Your `lerobot` environment is activated.
 - The robot arms and/or cameras are powered and wired as described in the [Build Guide](https://minko82.github.io/xlerobot-pro-website/build-guide.html).
 
@@ -41,7 +41,7 @@ python3 0_so100_keyboard_joint_control.py
 
 - **[`vision/`](vision/README.md)** → autonomous perception + IK demos (cube grasping and scripted motions).
 - **`policies/`** → running trained policies on the robot (`smolvla_policy_control.py`, `diffusion_policy_control.py`, `serve_policy.py`).
-- **`provided_examples/`** → additional, unverified upstream references; may require updates to work with XLeRobot-Pro.
+- **`xlerobot_examples/`** → additional, unverified upstream references; may require updates to work with XLeRobot-Pro.
 
 ## Benchmarks
 

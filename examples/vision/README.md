@@ -8,7 +8,7 @@ the differential-IK solver drives the SO-101 arm to it.
 RealSense capture ─▶ color detection ─▶ frame transform ─▶ IK ─▶ motor bus
 ```
 
-Install the vision extras first (`pip install -r requirements-vision.txt`) and
+Install the vision extras first (`pip install -r requirements/requirements-vision.txt`) and
 validate without hardware: `python tests/vision_offline_suite.py` (expected:
 49/49 passed).
 
