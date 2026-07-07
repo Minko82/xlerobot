@@ -7,24 +7,36 @@ wiring), follow the
 
 ## 1. Prerequisites
 
-- **OS:** Ubuntu 22.04/24.04 (x86_64 or NVIDIA Jetson) or macOS. The onboard
-  compute target is an NVIDIA Jetson Orin Nano.
+- **Target platform:** NVIDIA **Jetson Orin Nano Super** with JetPack 6
+  (Ubuntu 22.04, Python 3.10) — the robot's onboard computer. Any Ubuntu
+  22.04/24.04 or macOS machine also works for development.
 - **Python:** 3.10 or newer.
 - **Hardware access:** the Feetech motor buses enumerate as USB serial devices
   (`/dev/ttyACM*` on Linux, `/dev/tty.usbmodem*` on macOS).
 
 ## 2. Installation
 
-Clone the repository and install in a fresh environment (conda or venv):
+Clone the repository and install in a fresh environment (venv or conda):
 
 ```bash
 git clone https://github.com/Minko82/xlerobot-pro.git
 cd xlerobot-pro
 
-# with conda
-conda create -y -n lerobot python=3.10
-conda activate lerobot
+python3 -m venv ~/.venvs/xlerobot-pro
+source ~/.venvs/xlerobot-pro/bin/activate
+pip install --upgrade pip
+```
 
+**On the Jetson, install NVIDIA's PyTorch build first** — the generic PyPI
+wheel is CPU-only on aarch64:
+
+```bash
+pip install torch torchvision --index-url https://pypi.jetson-ai-lab.dev/jp6/cu126
+```
+
+Then install the project:
+
+```bash
 pip install -e ".[all]"        # or: make install
 ```
 
@@ -39,7 +51,7 @@ pip install -r requirements-macos.txt    # macOS (arm64)
 
 Extra dependencies for specific components:
 
-- **Vision + IK stack (`src/xlerobot_vision/`):** `pip install -r requirements-vision.txt`
+- **Vision + IK stack (`src/xlerobot_pro/`):** `pip install -r requirements-vision.txt`
   (pinocchio, pink + quadprog for IK, MuJoCo, RealSense, and the optional
   visualizers).
 - **VR teleoperation:** requires the XLeVR/TeleVuer stack; see the
@@ -99,7 +111,7 @@ python 9_dual_wrist_camera.py                       # wrist camera check
 
 ## 7. Autonomous cube manipulation (vision + IK)
 
-The `xlerobot_vision` library implements the RealSense-based perception →
+The `xlerobot_pro` library implements the RealSense-based perception →
 frame-transform → IK pipeline; `examples/vision/` contains the runnable demos.
 Validate the pipeline offline first:
 
@@ -113,16 +125,20 @@ python examples/vision/grab_cube.py      # live: detect a cube and grasp it
 See `examples/vision/README.md` for the demos and `diagnostics/README.md` for
 bus/motor/transform debugging tools.
 
-## 8. Jetson notes
+## 8. Jetson Orin Nano Super notes
 
+- Verify the GPU-enabled PyTorch is active:
+  `python -c "import torch; print(torch.cuda.is_available())"` should print
+  `True`. If not, reinstall from the JetPack index (section 2).
 - If `open3d` fails to import with an OpenMP error, preload libgomp:
 
   ```bash
   echo 'export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1' >> ~/.bashrc
   ```
 
-- Install the Jetson-specific PyTorch wheel from NVIDIA before
-  `pip install -e ".[all]"` so pip does not replace it with the CPU build.
+- For maximum inference performance, set the board to MAXN power mode:
+  `sudo nvpmodel -m 0 && sudo jetson_clocks`. On battery (Tri-Bus compute
+  rail), prefer the default mode to stay inside the power envelope.
 
 ## Troubleshooting
 

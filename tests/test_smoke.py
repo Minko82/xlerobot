@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VISION_ASSETS = REPO_ROOT / "src" / "xlerobot_vision" / "assets"
+VISION_ASSETS = REPO_ROOT / "src" / "xlerobot_pro" / "assets"
 
 # Model assets that the vision/IK library loads at runtime.
 REQUIRED_ASSETS = [
@@ -35,7 +35,7 @@ def test_model_assets_exist():
 
 
 def test_config_paths_resolve():
-    from xlerobot_vision import config
+    from xlerobot_pro import config
 
     assert config.MJCF_PATH.exists()
     assert config.FRONT_URDF_PATH.exists()

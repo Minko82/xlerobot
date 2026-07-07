@@ -10,7 +10,7 @@ from pathlib import Path
 
 np.set_printoptions(precision=4, suppress=True)
 
-from xlerobot_vision.config import MJCF_PATH
+from xlerobot_pro.config import MJCF_PATH
 model = pin.buildModelFromMJCF(str(MJCF_PATH))
 data = model.createData()
 

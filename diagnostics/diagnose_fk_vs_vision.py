@@ -14,10 +14,10 @@ import numpy as np
 import pinocchio as pin
 from pathlib import Path
 
-from xlerobot_vision import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
-from xlerobot_vision import detect_object
-from xlerobot_vision import camera_xyz_to_base_xyz
-from xlerobot_vision import capture
+from xlerobot_pro import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
+from xlerobot_pro import detect_object
+from xlerobot_pro import camera_xyz_to_base_xyz
+from xlerobot_pro import capture
 
 DEG2RAD = np.pi / 180.0
 RAD2DEG = 180.0 / np.pi
@@ -128,7 +128,7 @@ try:
     }
 
     # Show what the head motor-to-MJCF conversion produces
-    from xlerobot_vision.frame_transform import _head_motor_to_mjcf
+    from xlerobot_pro.frame_transform import _head_motor_to_mjcf
     head_mjcf = _head_motor_to_mjcf(np.array([head_pan_deg, head_tilt_deg]))
     print(f"\n  Head motor deg:  pan={head_pan_deg:.2f}, tilt={head_tilt_deg:.2f}")
     print(f"  Head MJCF deg:   pan={head_mjcf[0]:.2f}, tilt={head_mjcf[1]:.2f}")

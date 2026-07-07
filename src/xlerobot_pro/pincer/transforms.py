@@ -13,14 +13,14 @@ Typical usage
 import numpy as np
 import pinocchio as pin
 
-from xlerobot_vision.pincer.constants import (
+from xlerobot_pro.pincer.constants import (
     ARM_JOINTS,
     BASE_FRAME,
     CAMERA_FRAME,
     HEAD_JOINTS,
     URDF_PATH,
 )
-from xlerobot_vision.pincer.conventions import arm_motor_to_urdf, head_motor_to_urdf
+from xlerobot_pro.pincer.conventions import arm_motor_to_urdf, head_motor_to_urdf
 
 
 def build_t_base_camera(

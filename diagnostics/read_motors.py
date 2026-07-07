@@ -3,7 +3,7 @@
 Disable torque first so you can manually position the arm."""
 
 from lerobot.motors.feetech import FeetechMotorsBus
-from xlerobot_vision import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
+from xlerobot_pro import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
 
 bus = FeetechMotorsBus(port=BUS_PORT, motors=MOTOR_DEFS)
 bus.connect()

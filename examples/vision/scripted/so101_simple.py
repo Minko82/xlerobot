@@ -1,6 +1,6 @@
 from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 import numpy as np
-from xlerobot_vision import IK_SO101
+from xlerobot_pro import IK_SO101
 import time
 
 # Connect to robot

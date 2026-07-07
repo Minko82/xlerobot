@@ -1,6 +1,6 @@
 # Autonomous vision demos
 
-Demos for the `xlerobot_vision` pipeline: an Intel RealSense camera detects a
+Demos for the `xlerobot_pro` pipeline: an Intel RealSense camera detects a
 colored object, the detection is transformed into the arm's base frame, and
 the differential-IK solver drives the SO-101 arm to it.
 
@@ -22,4 +22,4 @@ validate without hardware: `python tests/vision_offline_suite.py` (expected:
   `so101_hang.py`.
 
 All demos use the calibration in `calibration/single_bus.json` (see
-`xlerobot_vision.config`) and default to the bus on `/dev/ttyACM0`.
+`xlerobot_pro.config`) and default to the bus on `/dev/ttyACM0`.

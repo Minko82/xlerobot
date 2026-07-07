@@ -6,7 +6,7 @@ Usage:
 
 from lerobot.robots.so101_follower import SO101Follower, SO101FollowerConfig
 
-from xlerobot_vision.config import BUS_PORT
+from xlerobot_pro.config import BUS_PORT
 
 config = SO101FollowerConfig(port=BUS_PORT, use_degrees=True)
 robot = SO101Follower(config)

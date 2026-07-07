@@ -25,15 +25,15 @@ from lerobot.robots.xlerobot.xlerobot import XLerobot
 from lerobot.robots.xlerobot.config_xlerobot import XLerobotConfig
 from lerobot.motors.motors_bus import MotorCalibration
 
-from xlerobot_vision.pincer.constants import (
+from xlerobot_pro.pincer.constants import (
     ARM_JOINTS, ARM_MOTORS, BASE_FRAME, EE_FRAME, URDF_PATH,
     HEAD_MOTORS,
 )
-from xlerobot_vision.pincer.conventions import arm_motor_to_urdf
-from xlerobot_vision.pincer.model import build_arm_model, motor_to_pin_q
+from xlerobot_pro.pincer.conventions import arm_motor_to_urdf
+from xlerobot_pro.pincer.model import build_arm_model, motor_to_pin_q
 
-from xlerobot_vision import PointCloud
-from xlerobot_vision import capture
+from xlerobot_pro import PointCloud
+from xlerobot_pro import capture
 
 PORT = "/dev/ttyACM0"
 HEAD_CALIBRATION_FILE = Path(__file__).resolve().parent.parent / "calibration" / "head.json"

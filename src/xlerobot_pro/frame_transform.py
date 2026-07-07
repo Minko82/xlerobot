@@ -11,7 +11,7 @@ import pinocchio as pin
 # ---------------------------------------------------------------------------
 # Model (loaded once)
 # ---------------------------------------------------------------------------
-from xlerobot_vision.config import MJCF_PATH as _MJCF_PATH
+from xlerobot_pro.config import MJCF_PATH as _MJCF_PATH
 
 _model = pin.buildModelFromMJCF(str(_MJCF_PATH))
 _data = _model.createData()

@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 class PointCloud:
     def __init__(self, captures_dir=None):
         if captures_dir is None:
-            # Default to where xlerobot_vision.realsense.capture() writes.
+            # Default to where xlerobot_pro.realsense.capture() writes.
             self.captures_dir = Path("outputs") / "realsense_capture"
         else:
             self.captures_dir = Path(captures_dir)

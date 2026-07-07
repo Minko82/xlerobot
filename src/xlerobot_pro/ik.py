@@ -13,7 +13,7 @@ try:
 except ModuleNotFoundError:
     MeshcatVisualizer = None
 
-from xlerobot_vision.config import MJCF_PATH as _MJCF_PATH
+from xlerobot_pro.config import MJCF_PATH as _MJCF_PATH
 
 # Joints to keep in the reduced model (first arm only)
 _ARM_JOINTS = {"Rotation_L", "Pitch_L", "Elbow_L", "Wrist_Pitch_L", "Wrist_Roll_L"}

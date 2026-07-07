@@ -3,7 +3,7 @@ from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 import numpy as np
 import json
 from pathlib import Path
-from xlerobot_vision import IK_SO101
+from xlerobot_pro import IK_SO101
 import time
 
 PORT = "/dev/ttyACM0"

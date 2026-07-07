@@ -3,8 +3,8 @@
 import numpy as np
 import pinocchio as pin
 
-from xlerobot_vision.pincer.constants import ARM_JOINTS, ARM_MOTORS, BASE_FRAME, EE_FRAME, URDF_PATH
-from xlerobot_vision.pincer.conventions import arm_motor_to_urdf
+from xlerobot_pro.pincer.constants import ARM_JOINTS, ARM_MOTORS, BASE_FRAME, EE_FRAME, URDF_PATH
+from xlerobot_pro.pincer.conventions import arm_motor_to_urdf
 
 
 def build_arm_model(
@@ -63,7 +63,7 @@ def motor_to_pin_q(q_motor: np.ndarray, model: pin.Model) -> np.ndarray:
 
 def pin_to_motor_q(q_pin: np.ndarray, model: pin.Model) -> np.ndarray:
     """Map a Pinocchio q vector back to arm motor-convention angles (degrees)."""
-    from xlerobot_vision.pincer.conventions import arm_urdf_to_motor
+    from xlerobot_pro.pincer.conventions import arm_urdf_to_motor
 
     q_urdf = np.zeros(len(ARM_JOINTS), dtype=float)
     for i, name in enumerate(ARM_JOINTS):

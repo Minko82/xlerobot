@@ -8,8 +8,8 @@ import pinocchio as pin
 
 from lerobot.robots.xlerobot.xlerobot import XLerobot
 from lerobot.robots.xlerobot.config_xlerobot import XLerobotConfig
-from xlerobot_vision.pincer.constants import ARM_MOTORS
-from xlerobot_vision.pincer.model import build_arm_model, motor_to_pin_q
+from xlerobot_pro.pincer.constants import ARM_MOTORS
+from xlerobot_pro.pincer.model import build_arm_model, motor_to_pin_q
 
 PORT = "/dev/ttyACM0"
 

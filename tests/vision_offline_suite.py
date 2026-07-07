@@ -29,7 +29,7 @@ import sys
 import numpy as np
 import pinocchio as pin
 
-from xlerobot_vision.config import MJCF_PATH as _MJCF_PATH
+from xlerobot_pro.config import MJCF_PATH as _MJCF_PATH
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -155,8 +155,8 @@ def test_fk_sanity(model: pin.Model):
 def test_frame_transform():
     section("3. Frame Transform (camera → Base)")
 
-    from xlerobot_vision import camera_xyz_to_base_xyz
-    from xlerobot_vision.frame_transform import _head_motor_to_mjcf
+    from xlerobot_pro import camera_xyz_to_base_xyz
+    from xlerobot_pro.frame_transform import _head_motor_to_mjcf
 
     # Test head motor → MJCF conversion
     test_deg = np.array([1.0, 14.0])  # should map to ~[0, 0] in MJCF
@@ -217,7 +217,7 @@ def test_frame_transform():
 def test_ik_convergence():
     section("4. IK Solver Convergence")
 
-    from xlerobot_vision import IK_SO101
+    from xlerobot_pro import IK_SO101
 
     # Test targets in Base frame
     targets = [
@@ -278,7 +278,7 @@ def test_ik_convergence():
 def test_ik_determinism():
     section("5. IK Solver Determinism (repeated calls)")
 
-    from xlerobot_vision import IK_SO101
+    from xlerobot_pro import IK_SO101
 
     target = [0.0, -0.20, 0.05]
 
@@ -369,7 +369,7 @@ def test_motor_mapping():
     check("Wrist_Roll passes through", abs(zero_motor[4]) < 0.01)
 
     # Verify motor angles are in a sane range for typical IK outputs
-    from xlerobot_vision import IK_SO101
+    from xlerobot_pro import IK_SO101
 
     ik = IK_SO101()
     traj = ik.generate_ik([0.0, -0.20, 0.05], [0, 0, 0])
@@ -397,7 +397,7 @@ def test_motor_mapping():
 def test_full_pipeline_roundtrip():
     section("7. Full Pipeline Round-Trip (synthetic)")
 
-    from xlerobot_vision import IK_SO101, camera_xyz_to_base_xyz
+    from xlerobot_pro import IK_SO101, camera_xyz_to_base_xyz
 
     # Simulate: object is at a known Base position.
     # We'll go backwards (Base → camera) to get a synthetic camera point,

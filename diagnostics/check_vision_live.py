@@ -23,11 +23,11 @@ import argparse
 import numpy as np
 from pathlib import Path
 
-from xlerobot_vision import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
+from xlerobot_pro import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
 from lerobot.motors.feetech import FeetechMotorsBus
-from xlerobot_vision import camera_xyz_to_base_xyz
-from xlerobot_vision import detect_object
-from xlerobot_vision import capture
+from xlerobot_pro import camera_xyz_to_base_xyz
+from xlerobot_pro import detect_object
+from xlerobot_pro import capture
 
 DEG2RAD = np.pi / 180.0
 OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"

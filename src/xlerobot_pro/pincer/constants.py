@@ -1,4 +1,4 @@
-from xlerobot_vision.config import FRONT_URDF_PATH as URDF_PATH  # noqa: F401
+from xlerobot_pro.config import FRONT_URDF_PATH as URDF_PATH  # noqa: F401
 
 BASE_FRAME = "Base"
 CAMERA_FRAME = "head_camera_rgb_optical_frame"

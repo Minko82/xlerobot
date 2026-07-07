@@ -11,8 +11,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from xlerobot_vision import COLOR_RANGES, detect_color, detection_to_xyz
-from xlerobot_vision import camera_xyz_to_base_xyz
+from xlerobot_pro import COLOR_RANGES, detect_color, detection_to_xyz
+from xlerobot_pro import camera_xyz_to_base_xyz
 
 CAPTURES_DIR = Path("outputs") / "realsense_capture"
 DEG2RAD = np.pi / 180.0

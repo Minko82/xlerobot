@@ -10,7 +10,7 @@
 
 The XLeRobot-Pro is an accessible bimanual mobile manipulator. Featuring an optimized 3D-printed frame, safety power envelopes, and NVIDIA Jetson Orin compute for high-end research and education.
 
-It is an evolution of the [XLeRobot](https://xlerobot.readthedocs.io/en/latest/software/getting_started/install.html) ecosystem. We have advanced the platform by integrating a stiffness-optimized structural redesign, a novel Tri-Bus power topology, and onboard GPU-accelerated autonomy, specifically tailored for accessible high-performance research and hands-on robotics education.
+It builds on the open-source [XLeRobot](https://github.com/Vector-Wangel/XLeRobot) project ([docs](https://xlerobot.readthedocs.io/)). Everything we have modified or added — the stiffness-optimized structural redesign, the Tri-Bus power topology, and the onboard GPU-accelerated autonomy stack (the `xlerobot_pro` library in this repository) — carries the **XLeRobot-Pro** name, tailored for accessible high-performance research and hands-on robotics education.
 
 <br>
 
@@ -39,17 +39,61 @@ It is an evolution of the [XLeRobot](https://xlerobot.readthedocs.io/en/latest/s
 
 ## Getting Started
 
-To get started with the XLeRobot-Pro, follow the instructions below:
+**Hardware build first:** follow the [Build Guide](https://minko82.github.io/xlerobot-pro-website/build-guide.html) on the project website for assembly, 3D printing, motor IDs, and the Tri-Bus wiring.
 
-- **Hardware Build:** For detailed assembly instructions, parts lists, and 3D-printing guides, follow the [Build Guide](https://minko82.github.io/xlerobot-pro-website/build-guide.html) on the project website.
-- **Software Setup:** For installation, serial port setup, motor ID assignment, calibration, and validation, see [docs/setup.md](docs/setup.md).
+### Software setup (Jetson Orin Nano Super)
+
+The robot's onboard computer is an NVIDIA **Jetson Orin Nano Super** running JetPack 6 (Ubuntu 22.04, Python 3.10). The same steps work on any Ubuntu/macOS machine for development.
+
+**1. Clone and create an environment**
 
 ```bash
 git clone https://github.com/Minko82/xlerobot-pro.git
 cd xlerobot-pro
-pip install -e ".[all]"
-make smoke   # verify the install — no hardware needed
+python3 -m venv ~/.venvs/xlerobot-pro
+source ~/.venvs/xlerobot-pro/bin/activate
+pip install --upgrade pip
 ```
+
+**2. Install PyTorch (Jetson only, before anything else)**
+
+The generic PyPI `torch` wheel does not use the Jetson GPU. Install NVIDIA's JetPack 6 build first so pip doesn't replace it:
+
+```bash
+pip install torch torchvision --index-url https://pypi.jetson-ai-lab.dev/jp6/cu126
+```
+
+**3. Install XLeRobot-Pro**
+
+```bash
+pip install -e ".[all]"                  # robot stack (vendored LeRobot fork + extras)
+pip install -r requirements-vision.txt   # vision + IK stack (pinocchio, pink, MuJoCo, RealSense)
+```
+
+**4. Grant serial port access (one time)**
+
+```bash
+sudo usermod -aG dialout $USER   # then log out and back in
+```
+
+**5. Verify — no hardware needed**
+
+```bash
+make smoke                             # compiles everything + runs the test suite
+python tests/vision_offline_suite.py   # full vision→IK pipeline check (expect 49/49)
+```
+
+**6. Bring up the robot**
+
+With the motors wired and powered per the Build Guide:
+
+```bash
+lerobot-find-port                                  # find the motor buses
+python examples/0_so100_keyboard_joint_control.py  # first motion test
+python examples/vision/grab_cube.py                # autonomous cube grasp demo
+```
+
+For motor ID assignment, calibration, Jetson quirks (open3d/libgomp), and troubleshooting, see the full guide: **[docs/setup.md](docs/setup.md)**.
 
 <br>
 
@@ -57,17 +101,17 @@ make smoke   # verify the install — no hardware needed
 
 ## Repository Layout
 
-| Path                                           | Contents                                                                         |
-| ---------------------------------------------- | -------------------------------------------------------------------------------- |
-| [`docs/setup.md`](docs/setup.md)               | Software setup and bring-up guide                                                |
-| [`src/lerobot/`](src/lerobot/)                 | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
-| [`examples/`](examples/README.md)              | Bring-up, teleoperation, policy, and autonomous-vision examples                  |
-| [`src/xlerobot_vision/`](src/xlerobot_vision/) | Vision + IK library: perception, frame transforms, differential IK, robot model  |
-| [`diagnostics/`](diagnostics/README.md)        | Bus, motor, and frame-transform debugging tools                                  |
-| [`calibration/`](calibration/)                 | Reference motor calibrations for the two arms                                    |
-| [`scripts/`](scripts/README.md)                | Utilities (Tri-Bus power-budget calculator)                                      |
-| [`set_motor_id.py`](set_motor_id.py)           | Motor ID assignment tool used during the hardware build                          |
-| [`tests/`](tests/)                             | Hardware-free smoke tests (`make smoke`)                                         |
+| Path                                     | Contents                                                                         |
+| ---------------------------------------- | -------------------------------------------------------------------------------- |
+| [`docs/setup.md`](docs/setup.md)         | Software setup and bring-up guide                                                |
+| [`src/lerobot/`](src/lerobot/)           | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
+| [`examples/`](examples/README.md)        | Bring-up, teleoperation, policy, and autonomous-vision examples                  |
+| [`src/xlerobot_pro/`](src/xlerobot_pro/) | Vision + IK library: perception, frame transforms, differential IK, robot model  |
+| [`diagnostics/`](diagnostics/README.md)  | Bus, motor, and frame-transform debugging tools                                  |
+| [`calibration/`](calibration/)           | Reference motor calibrations for the two arms                                    |
+| [`scripts/`](scripts/README.md)          | Utilities (Tri-Bus power-budget calculator)                                      |
+| [`set_motor_id.py`](set_motor_id.py)     | Motor ID assignment tool used during the hardware build                          |
+| [`tests/`](tests/)                       | Hardware-free smoke tests (`make smoke`)                                         |
 
 <br>
 
@@ -85,4 +129,4 @@ We are committed to fostering a collaborative ecosystem. If you have improved th
 
 ### Acknowledgements
 
-We would like to extend our sincere gratitude to the creators of the original [XLeRobot](https://xlerobot.readthedocs.io/en/latest/index.html) and [LeRobot](https://huggingface.co/docs/lerobot) projects. Their open-source contributions provided the essential foundation that made this evolution possible.
+We would like to extend our sincere gratitude to the creators of the original [XLeRobot](https://github.com/Vector-Wangel/XLeRobot) ([docs](https://xlerobot.readthedocs.io/)) and [LeRobot](https://huggingface.co/docs/lerobot) projects. Their open-source contributions provided the essential foundation that made this evolution possible.

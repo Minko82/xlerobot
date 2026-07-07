@@ -1,12 +1,12 @@
 from lerobot.motors.feetech import FeetechMotorsBus, OperatingMode
 from lerobot.motors import MotorCalibration, MotorNormMode
 import numpy as np
-from xlerobot_vision import IK_SO101
-from xlerobot_vision import detect_object
-from xlerobot_vision import camera_xyz_to_base_xyz
-from xlerobot_vision import capture
-from xlerobot_vision import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
-from xlerobot_vision import save_ik_plot
+from xlerobot_pro import IK_SO101
+from xlerobot_pro import detect_object
+from xlerobot_pro import camera_xyz_to_base_xyz
+from xlerobot_pro import capture
+from xlerobot_pro import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
+from xlerobot_pro import save_ik_plot
 import time
 
 DEG2RAD = np.pi / 180.0

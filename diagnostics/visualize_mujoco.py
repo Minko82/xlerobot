@@ -48,8 +48,8 @@ except ImportError:
     sys.exit(1)
 
 
-from xlerobot_vision import IK_SO101
-from xlerobot_vision.config import MJCF_PATH as _MJCF_PATH
+from xlerobot_pro import IK_SO101
+from xlerobot_pro.config import MJCF_PATH as _MJCF_PATH
 
 # Offset converts IK world positions (URDF) to MJCF world positions.
 # URDF Base X=-0.135, MJCF Base X=-0.09; URDF Base Y=-0.088, MJCF Base Y=-0.11
@@ -130,7 +130,7 @@ def run_visualization(
     # Optionally run the frame_transform pipeline with a synthetic point
     # ------------------------------------------------------------------
     if use_transform:
-        from xlerobot_vision import camera_xyz_to_base_xyz
+        from xlerobot_pro import camera_xyz_to_base_xyz
 
         # Synthesize a camera-frame point that roughly maps to our target.
         # Use head at neutral (pan=0, tilt=0 in motor convention = pan≈1°, tilt≈14° motor).

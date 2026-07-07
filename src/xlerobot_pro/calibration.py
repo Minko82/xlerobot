@@ -3,11 +3,11 @@
 Motor calibration module for SO-101 robot.
 
 Usage as standalone (always recalibrates):
-    python -m xlerobot_vision.calibration
-    python -m xlerobot_vision.calibration --file calibration/my_calib.json
+    python -m xlerobot_pro.calibration
+    python -m xlerobot_pro.calibration --file calibration/my_calib.json
 
 Usage as module (reuses existing calibration file if present):
-    from xlerobot_vision import load_or_run_calibration
+    from xlerobot_pro import load_or_run_calibration
     load_or_run_calibration(bus)
 """
 
@@ -18,7 +18,7 @@ from typing import cast
 
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 from lerobot.motors.feetech import FeetechMotorsBus
-from xlerobot_vision.config import BUS_PORT, CALIBRATION_DIR, DEFAULT_CALIBRATION_FILE  # noqa: F401
+from xlerobot_pro.config import BUS_PORT, CALIBRATION_DIR, DEFAULT_CALIBRATION_FILE  # noqa: F401
 
 # Motor definitions for the single-bus arm + head setup
 MOTOR_DEFS = {

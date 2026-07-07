@@ -12,7 +12,7 @@ import argparse
 from lerobot.motors import Motor, MotorNormMode
 from lerobot.motors.feetech import FeetechMotorsBus
 
-from xlerobot_vision.config import BUS_PORT
+from xlerobot_pro.config import BUS_PORT
 
 MOTOR_SETS = {
     "arm": {
