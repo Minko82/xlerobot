@@ -125,6 +125,17 @@ python examples/vision/grab_cube.py      # live: detect a cube and grasp it
 See `examples/vision/README.md` for the demos and `diagnostics/README.md` for
 bus/motor/transform debugging tools.
 
+## Firmware safety limits
+
+System-wide maximum torque, acceleration, and speed are defined in one
+place: [`src/xlerobot_pro/firmware_limits.py`](../src/xlerobot_pro/firmware_limits.py).
+The defaults implement the paper's firmware saturation settings (wheels/neck:
+torque 650 ~ 1.91 N*m, accel 20; arms: torque 450 ~ 1.32 N*m, accel 40) so each
+power bus stays inside its fuse rating. They are applied automatically when a
+robot connects and by the vision demos. To raise or lower the platform
+maximums, edit the commented constants in that file; verify what the motors
+actually stored with `python diagnostics/verify_motor_limits.py`.
+
 ## 8. Jetson Orin Nano Super notes
 
 - Verify the GPU-enabled PyTorch is active:

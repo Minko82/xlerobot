@@ -61,3 +61,28 @@ def test_calibration_files_are_valid_json():
     assert calibration_files, "No calibration files found"
     for path in calibration_files:
         json.loads(path.read_text())
+
+
+def test_firmware_limits_sane_and_wired():
+    from xlerobot_pro import firmware_limits as fl
+
+    # Register ranges (Feetech STS3215)
+    for torque in (fl.ARM_TORQUE_LIMIT, fl.WHEEL_NECK_TORQUE_LIMIT):
+        assert 0 <= torque <= 1000
+    for accel in (fl.ARM_ACCELERATION, fl.WHEEL_NECK_ACCELERATION):
+        assert 0 <= accel <= 254
+    assert 0 <= fl.ARM_MAX_VELOCITY <= 254
+    # Power-on ceiling must not undercut the runtime limits
+    assert max(fl.ARM_TORQUE_LIMIT, fl.WHEEL_NECK_TORQUE_LIMIT) <= fl.MAX_TORQUE_EPROM
+
+    # The limits must be applied system-wide: every robot class and the
+    # vision demos must reference the shared module.
+    consumers = [
+        REPO_ROOT / "src" / "lerobot" / "robots" / "xlerobot" / "xlerobot.py",
+        REPO_ROOT / "src" / "lerobot" / "robots" / "xlerobot" / "xlerobot_new_wiring.py",
+        REPO_ROOT / "src" / "lerobot" / "robots" / "xlerobot_2wheels" / "xlerobot_2wheels.py",
+        REPO_ROOT / "examples" / "vision" / "grab_cube.py",
+        REPO_ROOT / "diagnostics" / "verify_motor_limits.py",
+    ]
+    for path in consumers:
+        assert "firmware_limits" in path.read_text(), f"{path} does not use xlerobot_pro.firmware_limits"

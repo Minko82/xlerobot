@@ -1,13 +1,29 @@
+"""Write the system-wide firmware limits to an arm and read them back.
+
+The values come from xlerobot_pro.firmware_limits (single source of
+truth) — edit that module, not this script, to change the maximums.
+
+Usage:
+    python diagnostics/verify_motor_limits.py
+"""
+
 from lerobot.robots.so100_follower import SO100Follower, SO100FollowerConfig
 
+from xlerobot_pro.config import BUS_PORT
+from xlerobot_pro.firmware_limits import (
+    ARM_ACCELERATION,
+    ARM_MAX_VELOCITY,
+    MAX_TORQUE_EPROM,
+)
+
 # Connect to robot
-config = SO100FollowerConfig(port="/dev/ttyACM0", use_degrees=True)
+config = SO100FollowerConfig(port=BUS_PORT, use_degrees=True)
 robot = SO100Follower(config)
 robot.connect()
 
-BUS_AB_MAX_ACCELERATION = 40
-BUS_AB_MAX_TORQUE = 800
-BUS_AB_MAX_VELOCITY = 100
+BUS_AB_MAX_ACCELERATION = ARM_ACCELERATION
+BUS_AB_MAX_TORQUE = MAX_TORQUE_EPROM
+BUS_AB_MAX_VELOCITY = ARM_MAX_VELOCITY
 
 # Set the values
 for motor_name in ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]:

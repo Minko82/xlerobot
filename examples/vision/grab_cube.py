@@ -2,6 +2,7 @@ from lerobot.motors.feetech import FeetechMotorsBus, OperatingMode
 from lerobot.motors import MotorCalibration, MotorNormMode
 import numpy as np
 from xlerobot_pro import IK_SO101
+from xlerobot_pro.firmware_limits import ARM_ACCELERATION, ARM_TORQUE_LIMIT
 from xlerobot_pro import detect_object
 from xlerobot_pro import camera_xyz_to_base_xyz
 from xlerobot_pro import capture
@@ -38,6 +39,10 @@ arm_motors = [
 
 
 def apply_limits(bus, motors, torque: int, acceleration: int, p: int, i: int, d: int):
+    # Clamp to the system-wide firmware ceilings.
+    # To change the platform maximums, edit src/xlerobot_pro/firmware_limits.py.
+    torque = min(torque, ARM_TORQUE_LIMIT)
+    acceleration = min(acceleration, ARM_ACCELERATION)
     print("Applying motor limits:")
     print(f"    Torque_Limit = {torque} / 1000")
     print(f"    Acceleration = {acceleration} / 254")

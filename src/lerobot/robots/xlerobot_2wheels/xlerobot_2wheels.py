@@ -29,6 +29,11 @@ from lerobot.motors.feetech import (
     OperatingMode,
 )
 from lerobot.utils.errors import DeviceAlreadyConnectedError, DeviceNotConnectedError
+from xlerobot_pro.firmware_limits import (
+    WHEEL_MAX_RAW_SPEED,
+    apply_arm_limits,
+    apply_wheel_neck_limits,
+)
 
 from ..robot import Robot
 from ..utils import ensure_safe_goal_position
@@ -302,7 +307,7 @@ class XLerobot2Wheels(Robot):
         # and torque can be safely disabled to run calibration
         self.bus1.disable_torque()
         self.bus2.disable_torque()
-        self.bus2.configure_motors()
+        self.bus1.configure_motors()
         self.bus2.configure_motors()
 
         for name in self.left_arm_motors:
@@ -331,6 +336,13 @@ class XLerobot2Wheels(Robot):
 
         for name in self.base_motors:
             self.bus2.write("Operating_Mode", name, OperatingMode.VELOCITY.value)
+
+        # System-wide firmware saturation limits (paper Table III).
+        # To change the maximums, edit src/xlerobot_pro/firmware_limits.py.
+        apply_arm_limits(self.bus1, self.left_arm_motors)
+        apply_arm_limits(self.bus2, self.right_arm_motors)
+        apply_wheel_neck_limits(self.bus1, self.head_motors)
+        apply_wheel_neck_limits(self.bus2, self.base_motors)
 
         self.bus1.enable_torque()
         self.bus2.enable_torque()
@@ -372,7 +384,7 @@ class XLerobot2Wheels(Robot):
         theta: float,
         wheel_radius: float = None,
         wheelbase: float = None,
-        max_raw: int = 3000,
+        max_raw: int = WHEEL_MAX_RAW_SPEED,
     ) -> dict:
         """
         Convert desired body-frame velocities into wheel raw commands for differential drive.

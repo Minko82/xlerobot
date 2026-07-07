@@ -106,7 +106,7 @@ For motor ID assignment, calibration, Jetson quirks (open3d/libgomp), and troubl
 | [`docs/setup.md`](docs/setup.md)         | Software setup and bring-up guide                                                |
 | [`src/lerobot/`](src/lerobot/)           | Vendored LeRobot fork with XLeRobot-Pro robots, teleoperators, and power tooling |
 | [`examples/`](examples/README.md)        | Bring-up, teleoperation, policy, and autonomous-vision examples                  |
-| [`src/xlerobot_pro/`](src/xlerobot_pro/) | Vision + IK library: perception, frame transforms, differential IK, robot model  |
+| [`src/xlerobot_pro/`](src/xlerobot_pro/) | Vision + IK library, robot model, and system-wide firmware safety limits         |
 | [`diagnostics/`](diagnostics/README.md)  | Bus, motor, and frame-transform debugging tools                                  |
 | [`calibration/`](calibration/)           | Reference motor calibrations for the two arms                                    |
 | [`scripts/`](scripts/README.md)          | Utilities (Tri-Bus power-budget calculator)                                      |

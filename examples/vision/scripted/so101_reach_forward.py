@@ -6,6 +6,7 @@ import numpy as np
 import json
 from pathlib import Path
 from xlerobot_pro import IK_SO101
+from xlerobot_pro.firmware_limits import ARM_ACCELERATION, ARM_TORQUE_LIMIT
 import time
 
 PORT = "/dev/ttyACM0"
@@ -38,6 +39,10 @@ arm_motors = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wris
 
 
 def apply_limits(bus, motors, torque, acceleration, p, i, d):
+    # Clamp to the system-wide firmware ceilings.
+    # To change the platform maximums, edit src/xlerobot_pro/firmware_limits.py.
+    torque = min(torque, ARM_TORQUE_LIMIT)
+    acceleration = min(acceleration, ARM_ACCELERATION)
     bus.disable_torque(motors)
     for name in motors:
         bus.write("Operating_Mode", name, OperatingMode.POSITION.value)
