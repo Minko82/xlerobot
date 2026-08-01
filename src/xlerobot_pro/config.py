@@ -11,8 +11,14 @@ from pathlib import Path
 # Hardware defaults (override per-script with CLI flags where provided)
 # ---------------------------------------------------------------------------
 
-#: Default serial port for the single-bus arm + head setup.
-BUS_PORT = os.getenv("XLEROBOT_BUS_PORT", "/dev/ttyACM0")
+#: Bus 1: left arm (IDs 1-6) + right arm (IDs 7-12).
+ARMS_PORT = os.getenv("XLEROBOT_ARMS_PORT", "/dev/xle_arms")
+
+#: Bus 2: head (ID 1 = tilt, ID 2 = pan) + base wheels (IDs 3-5).
+HEAD_PORT = os.getenv("XLEROBOT_HEAD_PORT", "/dev/xle_head")
+
+#: Alias kept for scripts that only drive the arm bus.
+BUS_PORT = os.getenv("XLEROBOT_BUS_PORT", ARMS_PORT)
 
 # ---------------------------------------------------------------------------
 # Model assets (shipped as package data)

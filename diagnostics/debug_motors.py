@@ -1,36 +1,24 @@
 """Debug script: measure neutral offsets and joint directions."""
 from lerobot.motors.feetech import FeetechMotorsBus, OperatingMode
-from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 import numpy as np
-import json
-from pathlib import Path
 
-BUS_PORT = "/dev/ttyACM0"
-CALIBRATION_FILE = Path(__file__).resolve().parent / "calibration" / "single_bus.json"
-
-norm_mode_body = MotorNormMode.DEGREES
-
-bus = FeetechMotorsBus(
-    port=BUS_PORT,
-    motors={
-        "head_motor_1": Motor(1, "sts3215", norm_mode_body),
-        "head_motor_2": Motor(2, "sts3215", norm_mode_body),
-        "shoulder_pan":  Motor(7,  "sts3215", norm_mode_body),
-        "shoulder_lift": Motor(8,  "sts3215", norm_mode_body),
-        "elbow_flex":    Motor(9,  "sts3215", norm_mode_body),
-        "wrist_flex":    Motor(10, "sts3215", norm_mode_body),
-        "wrist_roll":    Motor(11, "sts3215", norm_mode_body),
-        "gripper":       Motor(12, "sts3215", MotorNormMode.RANGE_0_100),
-    },
+from xlerobot_pro import (
+    ARM_MOTOR_DEFS,
+    ARM_NAME_PREFIX,
+    ARMS_PORT,
+    HEAD_MOTOR_DEFS,
+    HEAD_PORT,
+    load_robot_calibration,
 )
-bus.connect()
 
-# Load calibration
-with open(CALIBRATION_FILE) as f:
-    calib_raw = json.load(f)
-bus.calibration = {
-    name: MotorCalibration(**vals) for name, vals in calib_raw.items()
-}
+# Bus 1: arm (IDs 7-12).  Bus 2: head (ID 1 = tilt, ID 2 = pan).
+bus = FeetechMotorsBus(port=ARMS_PORT, motors=ARM_MOTOR_DEFS)
+bus.connect()
+load_robot_calibration(bus, ARM_MOTOR_DEFS, prefix=ARM_NAME_PREFIX)
+
+head_bus = FeetechMotorsBus(port=HEAD_PORT, motors=HEAD_MOTOR_DEFS)
+head_bus.connect()
+load_robot_calibration(head_bus, HEAD_MOTOR_DEFS)
 
 arm_joints = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"]
 
@@ -64,3 +52,4 @@ for name in arm_joints:
     print(f"  {name:20s} = {neutral_vals[name]:8.2f} deg")
 
 bus.disconnect()
+head_bus.disconnect()

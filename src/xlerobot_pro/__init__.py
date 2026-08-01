@@ -20,9 +20,15 @@ _LAZY_EXPORTS = {
     "capture": ("xlerobot_pro.realsense", "capture"),
     "PointCloud": ("xlerobot_pro.point_cloud", "PointCloud"),
     "MOTOR_DEFS": ("xlerobot_pro.calibration", "MOTOR_DEFS"),
+    "ARM_MOTOR_DEFS": ("xlerobot_pro.calibration", "ARM_MOTOR_DEFS"),
+    "HEAD_MOTOR_DEFS": ("xlerobot_pro.calibration", "HEAD_MOTOR_DEFS"),
+    "ARM_NAME_PREFIX": ("xlerobot_pro.calibration", "ARM_NAME_PREFIX"),
     "load_or_run_calibration": ("xlerobot_pro.calibration", "load_or_run_calibration"),
+    "load_robot_calibration": ("xlerobot_pro.calibration", "load_robot_calibration"),
     "save_ik_plot": ("xlerobot_pro.viz", "save_ik_plot"),
     "BUS_PORT": ("xlerobot_pro.config", "BUS_PORT"),
+    "ARMS_PORT": ("xlerobot_pro.config", "ARMS_PORT"),
+    "HEAD_PORT": ("xlerobot_pro.config", "HEAD_PORT"),
 }
 
 __all__ = ["config", *_LAZY_EXPORTS]

@@ -1,10 +1,11 @@
 """Check which motors respond on a serial bus and print their raw positions.
 
-Replaces the old per-port check scripts. Pick the motor set that should be
-on the bus you are testing:
+Replaces the old per-port check scripts. Each motor set lives on its own bus,
+so the port is picked automatically unless you override it:
 
-    python diagnostics/check_bus.py --port /dev/ttyACM0 --motors arm
-    python diagnostics/check_bus.py --port /dev/ttyACM1 --motors head
+    python diagnostics/check_bus.py --motors arm    # Bus 1, /dev/xle_arms
+    python diagnostics/check_bus.py --motors head   # Bus 2, /dev/xle_head
+    python diagnostics/check_bus.py --motors arm --port /dev/ttyACM0
 """
 
 import argparse
@@ -12,7 +13,7 @@ import argparse
 from lerobot.motors import Motor, MotorNormMode
 from lerobot.motors.feetech import FeetechMotorsBus
 
-from xlerobot_pro.config import BUS_PORT
+from xlerobot_pro.config import ARMS_PORT, HEAD_PORT
 
 MOTOR_SETS = {
     "arm": {
@@ -32,11 +33,17 @@ MOTOR_SETS = {
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--port", default=BUS_PORT, help=f"Serial port (default: {BUS_PORT})")
+    parser.add_argument(
+        "--port", default=None, help="Serial port (default: ARMS_PORT for arm, HEAD_PORT for head)"
+    )
     parser.add_argument(
         "--motors", choices=sorted(MOTOR_SETS), default="arm", help="Motor set expected on this bus"
     )
     args = parser.parse_args()
+
+    # Each motor set lives on its own bus in the 2-bus wiring.
+    if args.port is None:
+        args.port = HEAD_PORT if args.motors == "head" else ARMS_PORT
 
     bus = FeetechMotorsBus(port=args.port, motors=MOTOR_SETS[args.motors])
     try:

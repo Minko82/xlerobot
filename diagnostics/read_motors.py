@@ -3,13 +3,13 @@
 Disable torque first so you can manually position the arm."""
 
 from lerobot.motors.feetech import FeetechMotorsBus
-from xlerobot_pro import BUS_PORT, MOTOR_DEFS, load_or_run_calibration
+from xlerobot_pro import ARM_MOTOR_DEFS, ARM_NAME_PREFIX, ARMS_PORT, load_robot_calibration
 
-bus = FeetechMotorsBus(port=BUS_PORT, motors=MOTOR_DEFS)
+bus = FeetechMotorsBus(port=ARMS_PORT, motors=ARM_MOTOR_DEFS)
 bus.connect()
-load_or_run_calibration(bus)
+load_robot_calibration(bus, ARM_MOTOR_DEFS, prefix=ARM_NAME_PREFIX)
 
-arm_motors = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"]
+arm_motors = list(ARM_MOTOR_DEFS)
 bus.disable_torque(arm_motors)
 
 input("Move the gripper directly above the cube, then press ENTER...")

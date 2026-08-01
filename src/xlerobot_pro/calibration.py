@@ -20,7 +20,28 @@ from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 from lerobot.motors.feetech import FeetechMotorsBus
 from xlerobot_pro.config import BUS_PORT, CALIBRATION_DIR, DEFAULT_CALIBRATION_FILE  # noqa: F401
 
-# Motor definitions for the single-bus arm + head setup
+# Bus 1 (ARMS_PORT): right arm, IDs 7-12. The left arm occupies IDs 1-6 on the
+# same bus and is not driven by the vision/IK stack.
+ARM_MOTOR_DEFS = {
+    "shoulder_pan": Motor(7, "sts3215", MotorNormMode.DEGREES),
+    "shoulder_lift": Motor(8, "sts3215", MotorNormMode.DEGREES),
+    "elbow_flex": Motor(9, "sts3215", MotorNormMode.DEGREES),
+    "wrist_flex": Motor(10, "sts3215", MotorNormMode.DEGREES),
+    "wrist_roll": Motor(11, "sts3215", MotorNormMode.DEGREES),
+    "gripper": Motor(12, "sts3215", MotorNormMode.RANGE_0_100),
+}
+
+# Bus 2 (HEAD_PORT): head, IDs 1-2. Names match XLerobotNewWiring so a single
+# calibration file serves both the robot class and this stack.
+#   head_motor_1 = ID 1 = tilt (up/down)
+#   head_motor_2 = ID 2 = pan  (left/right)
+HEAD_MOTOR_DEFS = {
+    "head_motor_1": Motor(1, "sts3215", MotorNormMode.DEGREES),
+    "head_motor_2": Motor(2, "sts3215", MotorNormMode.DEGREES),
+}
+
+# Original single-bus map (head IDs 1-2 + arm IDs 7-12 on one port). The
+# vision/IK scripts build their bus from this; left untouched.
 MOTOR_DEFS = {
     "head_motor_1": Motor(2, "sts3215", MotorNormMode.DEGREES),  # pan (ID 2)
     "head_motor_2": Motor(1, "sts3215", MotorNormMode.DEGREES),  # tilt (ID 1)
@@ -43,6 +64,42 @@ def load_calibration(bus: FeetechMotorsBus, filepath: Path) -> dict:
     bus.calibration = {name: MotorCalibration(**vals) for name, vals in calib_raw.items()}
     print(f"Loaded calibration from {filepath}")
     return calib_raw
+
+
+#: Calibration written by XLerobotNewWiring, in the LeRobot cache location.
+ROBOT_CALIBRATION_FILE = (
+    Path.home() / ".cache/huggingface/lerobot/calibration/robots/xlerobot_new_wiring/xlerobot.json"
+)
+
+#: XLerobotNewWiring prefixes arm joints by side; this stack uses bare names.
+ARM_NAME_PREFIX = "right_arm_"
+
+
+def load_robot_calibration(
+    bus: FeetechMotorsBus,
+    motor_defs: dict,
+    filepath: Path = ROBOT_CALIBRATION_FILE,
+    prefix: str = "",
+) -> dict:
+    """Apply an XLerobotNewWiring calibration file to ``bus``.
+
+    Lets the vision/IK stack reuse the whole-robot calibration instead of
+    keeping a second, separately-recorded copy. ``prefix`` bridges the robot
+    class's ``right_arm_<joint>`` naming to the bare names used here.
+    """
+    with open(filepath) as f:
+        raw = json.load(f)
+
+    calib = {}
+    for name in motor_defs:
+        key = f"{prefix}{name}"
+        if key not in raw:
+            raise KeyError(f"{key!r} not found in {filepath}")
+        calib[name] = MotorCalibration(**raw[key])
+
+    bus.calibration = calib
+    print(f"Loaded calibration for {len(calib)} motors from {filepath}")
+    return calib
 
 
 def run_interactive_calibration(bus: FeetechMotorsBus, filepath: Path) -> dict:
