@@ -96,7 +96,7 @@ pip install --upgrade pip
 **Do this before anything else on the Jetson.** The generic PyPI `torch` wheel is CPU-only on aarch64, so install NVIDIA's JetPack 6 build first — otherwise pip will pull the wrong one:
 
 ```bash
-pip install torch torchvision --index-url https://pypi.jetson-ai-lab.dev/jp6/cu126
+pip install torch torchvision --index-url https://pypi.jetson-ai-lab.io/jp6/cu126
 ```
 
 On a laptop/desktop for development, skip this step — the standard `torch` wheel is installed automatically in the next step.
