@@ -21,6 +21,10 @@ Register semantics (Feetech STS3215 firmware):
 - ``Acceleration`` — integer 0-254, ramp steepness (one unit ~= 8.7
   deg/s^2). Lower values give softer ramps and smaller inrush-current
   spikes; this is the primary speed governor for position moves.
+- ``Present_Temperature`` — integer degrees C, the servo's own internal
+  sensor. The firmware protects itself near 70 C; the ceiling below
+  stops well short of that so a run ends on our terms, not the
+  firmware's.
 """
 
 # ─────────────────────────────────────────────────────────────────────
@@ -59,6 +63,23 @@ ARM_ACCELERATION = 40
 #: register). Caps how fast a position move may run regardless of the
 #: commanded trajectory.
 ARM_MAX_VELOCITY = 100
+
+# ─────────────────────────────────────────────────────────────────────
+# Thermal
+# ─────────────────────────────────────────────────────────────────────
+
+#: Temperature ceiling for sustained-load work, degrees C.
+#: The STS3215 firmware trips its own overheat protection near 70 C. A
+#: run should stop before that: a firmware trip is abrupt and gives no
+#: controlled descent, whereas stopping here leaves margin to lower the
+#: arms gently. Also the endurance measurement -- time to reach this
+#: ceiling is what "how long can it hold X" means in practice.
+SERVO_TEMP_CEILING_C = 65
+
+#: Seconds over which to bleed torque away when releasing a loaded arm.
+#: Cutting Torque_Limit to zero in one write drops the arm; stepping it
+#: down lets gravity lower it against progressively weaker resistance.
+TORQUE_RELEASE_SECONDS = 8.0
 
 # ─────────────────────────────────────────────────────────────────────
 # Power-on defaults (EPROM)
