@@ -55,6 +55,35 @@ WHEEL_MAX_RAW_SPEED = 3000
 #: 5 A Bus B fuse.
 ARM_TORQUE_LIMIT = 450
 
+#: Elevated torque limit for SUPERVISED dynamic arm tests (B1 slew) only.
+#: NOT a system-wide maximum -- ``ARM_TORQUE_LIMIT`` above remains the
+#: platform default and must not be raised to this value.
+#:
+#: Why a separate constant, and why this is inside the fuse budget:
+#:
+#: ``ARM_TORQUE_LIMIT = 450`` is sized so that a DUAL-ARM STALL -- every
+#: arm joint saturating at once -- stays inside the 5 A Bus B fuse. A
+#: slew test is a different case: one joint (shoulder_lift, working
+#: against gravity plus payload) saturates while the rest hold station.
+#:
+#: Measured during a 366 g slew: the saturated lift joint drew 108
+#: current counts (~0.70 A at the STS3215's ~6.5 mA/count) while the ten
+#: holding joints drew ~5 counts each (~0.03 A). Total ~1.0 A of the 5 A
+#: budget. Scaling the one saturating joint to 650 takes it to ~1.0 A,
+#: for ~1.3 A total -- still roughly a quarter of the fuse rating.
+#:
+#: Constraints on use:
+#:   - apply to the swept joints only, never bus-wide
+#:   - supervised, short runs only; a stalled joint at 650 heats fast
+#:   - restore ``ARM_TORQUE_LIMIT`` afterwards (the slew script does this
+#:     in its gentle-release ``finally``)
+#:   - do NOT use for A2 thermal work; those runs are all at 450 and
+#:     changing it breaks comparability across the whole load sweep
+#:
+#: 650 matches the Bus A wheel/neck limit (~1.91 N*m), so it is a value
+#: the platform already runs elsewhere rather than a new extreme.
+SLEW_TORQUE_LIMIT = 650
+
 #: Maximum acceleration for the arm motors ("Soft" ramp), chosen to
 #: minimize inrush spikes during manipulation.
 ARM_ACCELERATION = 40
