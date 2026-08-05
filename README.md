@@ -137,6 +137,39 @@ On macOS no extra permission is needed; the buses appear as `/dev/tty.usbmodem*`
 
 <br>
 
+### 6b. Give the motor buses stable names
+
+**Do this before running anything that talks to motors.** Both bus adapters use the
+same USB-serial chip, so Linux names them `/dev/ttyACM0` and `/dev/ttyACM1` in
+whatever order they enumerate — and that order changes between boots and after any
+replug. Every entry point in this project opens `/dev/xle_arms` and `/dev/xle_head`
+instead (see `src/xlerobot_pro/config.py`), which are stable symlinks keyed on each
+adapter's USB serial number.
+
+With both adapters plugged in and the motors powered:
+
+```bash
+python diagnostics/detect_buses.py
+```
+
+It pings every ID on each port and works out which adapter is which — the arms bus
+answers IDs 1–12, the head/base bus answers 1–5 — then prints the exact udev rules
+with the serials filled in. Install them, reload, and replug both adapters:
+
+```bash
+sudo udevadm control --reload-rules && sudo udevadm trigger
+ls -l /dev/xle_arms /dev/xle_head        # both should now exist
+```
+
+If you already have an older rules file with different serials, delete it. Stale
+rules are confusing and can define names nothing uses.
+
+> **Ports are overridable** via `XLEROBOT_ARMS_PORT` and `XLEROBOT_HEAD_PORT` if you
+> would rather point at raw device names, but the symlinks are strongly preferred —
+> without them a replug can silently swap which bus a script talks to.
+
+<br>
+
 ### 7. Verify the install — no hardware needed
 
 Confirm the software is healthy before touching the robot:
@@ -236,7 +269,11 @@ python diagnostics/verify_motor_limits.py
 | Symptom                           | Fix                                                                  |
 | --------------------------------- | ------------------------------------------------------------------- |
 | `Permission denied: /dev/ttyACM0` | Grant serial access — [step 6](#6-grant-serial-port-access)         |
+| `could not open port /dev/xle_arms` | The udev symlinks do not exist — [step 6b](#6b-give-the-motor-buses-stable-names) |
 | Motor not found on bus            | Re-check IDs ([step 8](#8-assign-motor-ids)); ensure only one bus terminator is powered |
+| Motors answer the bus but **never move** | The bus has logic power but not motor power. Load pins at `1024 + Torque_Limit` with current 0. Check `Present_Voltage`: ~120–135 = 12 V (good), ~50 = the bus is on a 5 V rail |
+| A bus vanishes after the base drives | A cable was tugged loose. Check `dmesg` for `error -110` / `unable to enumerate`; strain-relieve the leads before any driving test |
+| Arm drops when a script ends       | Torque was cut rather than bled off — see the gotchas in [`diagnostics/README.md`](diagnostics/README.md) |
 | `ModuleNotFoundError: lerobot`    | Activate the environment and re-run `pip install -e ".[all]"`        |
 | RealSense frames time out         | Replug the USB 3.0 cable; check `rs-enumerate-devices`              |
 

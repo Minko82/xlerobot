@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""Identify the motor buses and emit the udev rules that give them stable names.
+
+Run this once after building the robot, before anything else.
+
+The problem it solves: both bus adapters are the same USB-serial chip, so Linux
+names them ``/dev/ttyACM0`` and ``/dev/ttyACM1`` in whatever order they enumerate
+-- and that order changes between boots and after any replug. Everything in this
+project opens ``/dev/xle_arms`` and ``/dev/xle_head`` instead, which are stable
+symlinks keyed on each adapter's USB serial number.
+
+This script works out which adapter is which by asking the motors. The arms bus
+answers IDs 1-12; the head/base bus answers 1-5. Then it prints the exact udev
+rules to install, with the serials filled in.
+
+Usage:
+    python diagnostics/detect_buses.py
+    python diagnostics/detect_buses.py --write   # also write the rules file
+
+After installing the rules::
+
+    sudo udevadm control --reload-rules && sudo udevadm trigger
+
+Then unplug and replug both adapters, and check ``ls -l /dev/xle_*``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import glob
+import subprocess
+import sys
+from pathlib import Path
+
+RULES_PATH = Path("/etc/udev/rules.d/99-xlerobot.rules")
+
+#: Motor IDs expected on each bus. Arms carry 12 (two six-joint arms); the
+#: head/base bus carries 2 neck motors plus 3 wheels.
+ARMS_IDS = set(range(1, 13))
+HEAD_IDS = set(range(1, 6))
+
+
+def usb_serial(dev: str) -> str | None:
+    try:
+        out = subprocess.run(["udevadm", "info", "-q", "property", "-n", dev],
+                             capture_output=True, text=True, timeout=5).stdout
+    except Exception:
+        return None
+    for line in out.splitlines():
+        if line.startswith("ID_SERIAL_SHORT="):
+            return line.split("=", 1)[1].strip()
+    return None
+
+
+def scan(port: str) -> list[int]:
+    """Ping IDs 1-12 and return those that answer."""
+    from lerobot.motors import Motor, MotorNormMode
+    from lerobot.motors.feetech import FeetechMotorsBus
+
+    bus = FeetechMotorsBus(port=port,
+                           motors={"probe": Motor(1, "sts3215", MotorNormMode.RANGE_M100_100)})
+    found = []
+    try:
+        bus.connect(handshake=False)
+        for i in range(1, 13):
+            try:
+                if bus.ping(i, num_retry=1) is not None:
+                    found.append(i)
+            except Exception:
+                pass
+    except Exception as exc:
+        print(f"    could not open {port}: {type(exc).__name__}")
+        return []
+    finally:
+        try:
+            # disable_torque=False matters: the default cuts holding torque on
+            # every motor in the dict, which would drop a loaded arm.
+            bus.disconnect(disable_torque=False)
+        except Exception:
+            pass
+    return found
+
+
+def classify(ids: list[int]) -> str:
+    s = set(ids)
+    if not s:
+        return "empty"
+    if s & {7, 8, 9, 10, 11, 12}:
+        return "arms"          # only the arms bus has IDs above 6
+    if s and s <= HEAD_IDS:
+        return "head"
+    return "unknown"
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--write", action="store_true",
+                    help=f"Write {RULES_PATH} (needs sudo) instead of only printing it.")
+    args = ap.parse_args()
+
+    ports = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
+    if not ports:
+        print("No /dev/ttyACM* or /dev/ttyUSB* devices found.")
+        print("Check the adapters are plugged in and that `lsusb` lists them.")
+        return 1
+
+    print(f"Found {len(ports)} serial device(s). Scanning for motors...\n")
+    results = {}
+    for port in ports:
+        ids = scan(port)
+        kind = classify(ids)
+        serial = usb_serial(port)
+        results[port] = (kind, serial, ids)
+        shown = ",".join(map(str, ids)) if ids else "none"
+        print(f"  {port}  serial={serial or '?'}  motors=[{shown}]  -> {kind}")
+
+    arms = [p for p, (k, _, _) in results.items() if k == "arms"]
+    head = [p for p, (k, _, _) in results.items() if k == "head"]
+
+    print()
+    if not arms:
+        print("WARNING: no bus answered on IDs 7-12, so the arms bus was not identified.")
+        print("  - is the arms bus powered? Motors that have logic power but no motor")
+        print("    power still answer, so also check Present_Voltage (~120-135 = 12 V).")
+        print("  - have motor IDs been assigned yet? See README step 8.")
+    if not head:
+        print("WARNING: no bus answered with only IDs 1-5, so the head/base bus was not")
+        print("  identified. Same checks as above.")
+    if len(arms) > 1 or len(head) > 1:
+        print("WARNING: more than one bus matched a role. Unplug all but one and re-run.")
+
+    lines = ["# XLeRobot-Pro Feetech bus adapters — stable names keyed on USB serial.",
+             "# Generated by diagnostics/detect_buses.py",
+             "# Bus 1: left arm (IDs 1-6) + right arm (IDs 7-12)",
+             "# Bus 2: head (IDs 1-2) + base wheels (IDs 3-5)"]
+    ok = True
+    for role, ports_ in (("xle_arms", arms), ("xle_head", head)):
+        if not ports_:
+            ok = False
+            continue
+        serial = results[ports_[0]][1]
+        if not serial:
+            print(f"WARNING: no USB serial for {ports_[0]}; cannot write a stable rule.")
+            ok = False
+            continue
+        lines.append(f'SUBSYSTEM=="tty", ATTRS{{serial}}=="{serial}", SYMLINK+="{role}"')
+
+    text = "\n".join(lines) + "\n"
+    print("\n--- udev rules ---")
+    print(text.rstrip())
+    print("------------------\n")
+
+    if not ok:
+        print("Not writing: at least one bus was not identified.")
+        return 1
+
+    if args.write:
+        try:
+            RULES_PATH.write_text(text)
+            print(f"Wrote {RULES_PATH}")
+        except PermissionError:
+            print(f"Permission denied writing {RULES_PATH}. Re-run with sudo, or paste the")
+            print("rules above into that file yourself.")
+            return 1
+    else:
+        print(f"To install:  sudo tee {RULES_PATH} <<'EOF'\n{text}EOF")
+
+    print("\nThen reload and replug both adapters:")
+    print("  sudo udevadm control --reload-rules && sudo udevadm trigger")
+    print("  ls -l /dev/xle_arms /dev/xle_head")
+    print("\nIf an older rules file exists (e.g. 99-xle-motors.rules) with different")
+    print("serials, delete it — stale rules are confusing and can define unused names.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

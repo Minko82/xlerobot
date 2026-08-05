@@ -10,12 +10,16 @@ Scale comes from the markers themselves: the printed side length is known, so
 pixels convert to millimetres per frame. That also absorbs changes in
 camera-to-object distance, which a fixed mm-per-pixel constant would not.
 
-Runs on the Jetson (OpenCV with aruco). Copy the video over first::
+Needs OpenCV with the `aruco` module, which is present in the Jetson environment
+but often not in a desktop install -- so this usually runs on the robot. Copy the
+clip over first::
 
-    scp clip.mov xle@10.0.0.197:/tmp/
-    ssh xle@10.0.0.197 'cd ~/xlerobot-pro && ~/.venvs/xlerobot-pro/bin/python \\
-        diagnostics/b1_slip_from_video.py /tmp/clip.mov --marker-mm 30 \\
-        --out results/B1/base_0.5ms2_600g'
+    scp clip.mov <user>@<robot-host>:/tmp/
+    python diagnostics/b1_slip_from_video.py /tmp/clip.mov --marker-mm 30 \\
+        --out results/B1/base_0.5ms2_600g
+
+Pass the marker's MEASURED printed size, not its nominal one -- printers scale,
+and that single number sets the scale of every result.
 
 Reported honestly: if markers are missing for part of the clip, the gap is stated
 rather than interpolated over.
