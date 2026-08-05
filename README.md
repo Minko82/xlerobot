@@ -279,6 +279,9 @@ python diagnostics/verify_motor_limits.py
 
 For bus, motor, and frame-transform debugging tools, see [`diagnostics/README.md`](diagnostics/README.md).
 
+> Measurement-protocol tooling and experimental data are kept outside this
+> repository. This one is for operating the robot.
+
 <br>
 
 ---
