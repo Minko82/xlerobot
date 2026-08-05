@@ -56,8 +56,25 @@ RETRY = 5
 #: The only joint left free for the operator to set per run.
 GRIPPER = "right_gripper"
 
+#: Gripper load below this means the jaws are not actually on the object --
+#: they have been closed to a position but are pressing into nothing.
+GRIPPER_LOAD_CONTACT = 30
+
+#: Above this the jaws are pressing hard. Fine for a rigid object, but worth
+#: flagging before something gets crushed or the servo stalls all run.
+GRIPPER_LOAD_WARN = 250
+
+#: Largest single squeeze step, so a mistyped number cannot slam the jaws shut.
+GRIPPER_MAX_STEP = 40
+
 #: Seconds to let the arms settle after the ramp before recording the baseline.
 SETTLE_SECONDS = 3.0
+
+#: Refuse to log if any joint settles further than this from the reference pose.
+#: Loaded joints legitimately sag tens of counts (80 at 700 g); hundreds means the
+#: arm never reached the reference geometry, so the baseline -- and every drift
+#: number derived from it -- would be captured in the wrong place.
+MAX_SETTLE_OFFSET = 150
 
 
 def save_pose(path: Path, targets: dict) -> None:
@@ -176,6 +193,10 @@ def main() -> int:
                              "The servos protect themselves at 70 C, so stopping below that "
                              "avoids a firmware trip and records time-to-threshold, which is "
                              "the endurance measurement.")
+    parser.add_argument("--no-grip", action="store_true",
+                        help="Skip the interactive squeeze and just hold the hand-set gripper "
+                             "position. Use when the load hangs on a thread rather than being "
+                             "grasped, since a thread needs no grip force.")
     parser.add_argument("--hold-head", action="store_true",
                         help="Also hold the head pose. Off by default: the head is unloaded "
                              "and holding it adds draw without adding information.")
@@ -218,16 +239,76 @@ def main() -> int:
             move_to(buses, hold_names, targets, seconds=args.move_seconds)
             print("  In position.")
 
-            # Free the right gripper only, so the operator can wrap it around
-            # the weight without disturbing the rest of the pose.
+            # Free the right gripper only, so the operator can place the object
+            # without disturbing the rest of the pose.
             arms = buses[0][1]
             arms.disable_torque([GRIPPER], num_retry=RETRY)
             print(f"\n  {GRIPPER} released — everything else is holding.")
-            input("  Wrap the gripper around the weight, then press ENTER...")
+            input("  Place the object between the jaws, then press ENTER...")
             grip = arms.sync_read("Present_Position", [GRIPPER], normalize=False)
             targets["arms"][GRIPPER] = grip[GRIPPER]
             arms.enable_torque([GRIPPER], num_retry=RETRY)
-            print(f"  {GRIPPER} holding at {grip[GRIPPER]}")
+            arms.sync_write("Goal_Position", {GRIPPER: targets["arms"][GRIPPER]},
+                            normalize=False, num_retry=RETRY)
+            print(f"  {GRIPPER} holding at {targets['arms'][GRIPPER]}")
+
+            # Squeeze interactively.
+            #
+            # Holding the hand-set position applies NO grip force -- the servo is
+            # already at its goal, so position error is zero and it pushes with
+            # nothing. Real grip needs a goal driven PAST where the jaws contact
+            # the object, so the servo keeps pressing into it. The operator nudges
+            # until load reads a real value, which is the only reliable signal
+            # that the object is actually gripped rather than merely touched.
+            if not args.no_grip:
+                print("\n  Squeeze the jaws. Type a signed step (e.g. '+10' or '-5'),")
+                print("  'r' to re-read, or 'ok' when the load reads a solid grip.")
+                print(f"  Load above {GRIPPER_LOAD_WARN} means it is pressing hard — stop there.")
+                while True:
+                    pos = arms.read("Present_Position", GRIPPER, normalize=False, num_retry=RETRY)
+                    load = arms.read("Present_Load", GRIPPER, num_retry=RETRY)
+                    cur = arms.read("Present_Current", GRIPPER, num_retry=RETRY)
+                    flag = "  <-- FIRM" if load >= GRIPPER_LOAD_WARN else (
+                        "  (no contact)" if load < GRIPPER_LOAD_CONTACT else "")
+                    print(f"    goal {targets['arms'][GRIPPER]:>5}  pos {pos:>5}  "
+                          f"load {load:>4}  current {cur:>4}{flag}")
+                    try:
+                        cmd = input("  > ").strip().lower()
+                    except EOFError:
+                        break
+                    if cmd in ("ok", "done", ""):
+                        break
+                    if cmd == "r":
+                        continue
+                    try:
+                        step = int(cmd)
+                    except ValueError:
+                        print("    signed integer, 'r', or 'ok'")
+                        continue
+                    if abs(step) > GRIPPER_MAX_STEP:
+                        print(f"    step capped at {GRIPPER_MAX_STEP} counts")
+                        step = GRIPPER_MAX_STEP if step > 0 else -GRIPPER_MAX_STEP
+                    targets["arms"][GRIPPER] += step
+                    arms.sync_write("Goal_Position", {GRIPPER: targets["arms"][GRIPPER]},
+                                    normalize=False, num_retry=RETRY)
+                    time.sleep(0.4)
+                final_load = arms.read("Present_Load", GRIPPER, num_retry=RETRY)
+                print(f"  {GRIPPER} gripping at {targets['arms'][GRIPPER]}, load {final_load}")
+                if final_load < GRIPPER_LOAD_CONTACT:
+                    print("  [warn] load is near zero — the jaws are probably not on the object.")
+
+            # Re-assert the commanded pose BEFORE settling.
+            #
+            # Hanging the load can hold a servo above Overload_Torque (80%) for
+            # longer than Protection_Time (2 s), which latches its output down to
+            # Protective_Torque (20%) and the arm collapses. The latch clears on a
+            # fresh Goal_Position write, so issue one here -- while there is still
+            # time to recover -- instead of only when logging starts. This writes
+            # the REFERENCE target, never the settled position, so in a healthy run
+            # it is a no-op and the pose is undisturbed.
+            for label, bus in buses:
+                if hold_names[label]:
+                    bus.sync_write("Goal_Position", targets[label], normalize=False, num_retry=RETRY)
 
             # Record where the arms actually settle, WITHOUT changing the goal.
             #
@@ -237,6 +318,7 @@ def main() -> int:
             # further -- visibly, by a few mm. The commanded pose must therefore
             # stay fixed; only the analysis baseline moves.
             time.sleep(SETTLE_SECONDS)
+            adrift = []
             for label, bus in buses:
                 if hold_names[label]:
                     settled = bus.sync_read("Present_Position", hold_names[label], normalize=False)
@@ -244,7 +326,27 @@ def main() -> int:
                         offset = pos - targets[label][name]
                         if abs(offset) > 3:
                             print(f"    {name:24s} settled {offset:+d} from commanded")
+                        if abs(offset) > MAX_SETTLE_OFFSET:
+                            adrift.append((name, offset))
                         baseline[label][name] = pos
+
+            # Never log from the wrong geometry. A latched servo, a failed ramp or
+            # a fouled load all look fine once the run is under way, but the
+            # baseline is taken here -- so a bad pose corrupts the whole run
+            # silently. Stop while that is still obvious.
+            if adrift:
+                print(f"\n  ABORT: {len(adrift)} joint(s) over {MAX_SETTLE_OFFSET} counts "
+                      "from the reference pose:")
+                for name, offset in adrift:
+                    print(f"    {name:24s} {offset:+d} counts")
+                print("\n  The arms are not at the reference geometry, so the baseline would")
+                print("  be recorded in the wrong place. Nothing has been logged.")
+                print("  Check the load hangs free, let the servo settle, and re-run.")
+                try:
+                    out_dir.rmdir()  # only succeeds while still empty
+                except OSError:
+                    pass
+                return 2
         else:
             # --- CAPTURE: pose by hand once, save as the reference ----------
             for label, bus in buses:
