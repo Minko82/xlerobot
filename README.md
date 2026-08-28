@@ -30,7 +30,7 @@ It builds on the open-source [XLeRobot](https://github.com/Vector-Wangel/XLeRobo
 - **Accessible Platform:** Total Bill of Materials (BOM) under $1,300.
 - **Tri-Bus Power Topology:** Prevents compute brownouts by isolating high-transient motor loads.
 - **Onboard Intelligence:** NVIDIA Jetson Orin Nano for autonomous SLAM and 67 TOPS edge inference.
-- **Bimanual Flexibility:** 1kg payload per arm with modular, 3D-printed structural design.
+- **Bimanual Flexibility:** 600 g–1 kg payload per arm with modular, 3D-printed structural design. Payload on uncooled actuators is a hold duration, not a flat rating — sustained loads near the top of that range are thermally limited.
 - **Intuitive Control:** Low-latency VR interface with handtracking for human-in-the-loop coordination.
 
 <br>
