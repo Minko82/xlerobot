@@ -78,6 +78,9 @@ except ImportError:  # running from the data checkout, where xle_arms sits along
 #: success *against* joint temperature rather than despite it.
 TEMP_CHECK_EVERY = 30
 
+#: Action keys starting with this are passed through unsmoothed.
+GRIPPER_PREFIX = "gripper"
+
 
 #: Attempts before giving up on the bus. lerobot's reads and writes default to
 #: no retry, so a single dropped packet raises straight out of the control loop
@@ -208,6 +211,15 @@ def main() -> int:
                         "that jump is what reads as twitchiness. Smaller N corrects more "
                         "often by less. Must not exceed chunk_size. Inference-time only: it "
                         "changes nothing about the trained weights.")
+    r.add_argument("--smooth", type=float, default=1.0, metavar="A",
+                   help="Exponential smoothing on the commanded joint targets: "
+                        "cmd = A*action + (1-A)*previous_cmd. 1.0 (default) sends the "
+                        "policy output unchanged, which is what every measurement so far "
+                        "used. Lower values damp the step change that lands each time "
+                        "ACT's queue empties -- the loop stalls ~100 ms for inference, the "
+                        "servo holds its last goal, and the next command arrives as a jump. "
+                        "0.3-0.5 is a reasonable place to start. Costs tracking lag, so "
+                        "report the value used.")
     r.add_argument("--no-envelope", action="store_true",
                    help="Skip the Table III clamp. Only for the C1 unsized experiment.")
     args = p.parse_args()
@@ -276,6 +288,11 @@ def main() -> int:
     else:
         print("  envelope NOT applied (--no-envelope)")
 
+    if not 0.0 < args.smooth <= 1.0:
+        raise SystemExit("--smooth must be in (0, 1]")
+    if args.smooth < 1.0:
+        print(f"  smoothing: alpha {args.smooth:g} on body joints (gripper unfiltered)")
+
     pre.reset()
     post.reset()
     policy.reset()
@@ -285,6 +302,7 @@ def main() -> int:
     step = 0
     stopped = ""
     peak_c = 0
+    prev_cmd = None
     print(f"\n  running {'%d steps' % args.steps if args.steps else '%.0f s' % args.duration}"
           f" at {args.fps:g} Hz target -- Ctrl-C to stop\n")
     t_start = time.perf_counter()
@@ -309,7 +327,23 @@ def main() -> int:
             )
             infer_ms.append((time.perf_counter() - t_inf) * 1000.0)
 
-            robot.send_action(make_robot_action(action_values, features))
+            action = make_robot_action(action_values, features)
+            if args.smooth < 1.0:
+                if prev_cmd is None:
+                    # Seed from where the arm actually is. Smoothing against nothing
+                    # would send the raw first command, and the opening command is
+                    # exactly where a policy started outside its training
+                    # distribution lurches hardest.
+                    prev_cmd = {k: float(obs[k]) for k in action if k in obs}
+                for k in action:
+                    # The gripper is deliberately unfiltered. A grasp has to close
+                    # decisively; lagging the jaws behind the command is how the arm
+                    # arrives at the bottle with the fingers still opening.
+                    if k.startswith(GRIPPER_PREFIX) or k not in prev_cmd:
+                        continue
+                    action[k] = args.smooth * float(action[k]) + (1.0 - args.smooth) * prev_cmd[k]
+                prev_cmd = {k: float(v) for k, v in action.items()}
+            robot.send_action(action)
             step += 1
             loop_ms.append((time.perf_counter() - loop_t) * 1000.0)
 
