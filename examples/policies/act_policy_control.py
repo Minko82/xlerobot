@@ -220,6 +220,22 @@ def main() -> int:
                         "servo holds its last goal, and the next command arrives as a jump. "
                         "0.3-0.5 is a reasonable place to start. Costs tracking lag, so "
                         "report the value used.")
+    r.add_argument("--aim-offset", default=None, metavar="JOINT=UNITS",
+                   help="Constant corrections added to the policy's commanded joints, "
+                        "comma separated, e.g. 'shoulder_pan=-0.9'. This is for a "
+                        "MEASURED bias in the policy's own output, not a tuning knob: "
+                        "against glassbottle_pick_v3's own training frames the policy "
+                        "predicts shoulder_pan with slope 1.037 and intercept +0.89, so "
+                        "it tracks the bottle faithfully and simply aims ~0.9 units to "
+                        "one side. Anything applied here changes what a reported success "
+                        "rate means and belongs in the results. Re-derive it whenever the "
+                        "scene changes -- an offset fitted under the wrong lighting or a "
+                        "drifted rig will over-correct once those are fixed.")
+    r.add_argument("--log-trajectory", type=Path, default=None, metavar="CSV",
+                   help="Write per-step observed state and commanded action to CSV. "
+                        "The only way to tell a policy that never commanded a motion "
+                        "from one whose command was clamped, filtered or bled away on "
+                        "exit -- the arm's final pose cannot distinguish those.")
     r.add_argument("--no-envelope", action="store_true",
                    help="Skip the Table III clamp. Only for the C1 unsized experiment.")
     args = p.parse_args()
@@ -288,6 +304,24 @@ def main() -> int:
     else:
         print("  envelope NOT applied (--no-envelope)")
 
+    aim_offset: dict[str, float] = {}
+    if args.aim_offset:
+        for pair in args.aim_offset.split(","):
+            name, sep, val = pair.partition("=")
+            if not sep:
+                raise SystemExit(f"--aim-offset wants JOINT=UNITS, got {pair!r}")
+            try:
+                aim_offset[f"{name.strip()}.pos"] = float(val)
+            except ValueError:
+                raise SystemExit(f"--aim-offset: {val!r} is not a number") from None
+        known = set(robot.action_features)
+        for k in aim_offset:
+            if k not in known:
+                raise SystemExit(f"--aim-offset: {k!r} is not a joint of this arm "
+                                 f"({', '.join(sorted(known))})")
+        print("  aim offset: " + ", ".join(f"{k[:-4]} {v:+g}" for k, v in aim_offset.items())
+              + "   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
+
     if not 0.0 < args.smooth <= 1.0:
         raise SystemExit("--smooth must be in (0, 1]")
     if args.smooth < 1.0:
@@ -296,6 +330,16 @@ def main() -> int:
     pre.reset()
     post.reset()
     policy.reset()
+
+    traj_f = traj_w = None
+    if args.log_trajectory:
+        import csv
+        joints = [k[:-4] for k in sorted(robot.action_features)]
+        traj_f = open(args.log_trajectory, "w", newline="")
+        traj_w = csv.writer(traj_f)
+        traj_w.writerow(["step", "t_s"] + [f"state.{j}" for j in joints]
+                        + [f"cmd.{j}" for j in joints])
+        print(f"  logging trajectory to {args.log_trajectory}")
 
     infer_ms, loop_ms = [], []
     period = 1.0 / args.fps
@@ -328,6 +372,12 @@ def main() -> int:
             infer_ms.append((time.perf_counter() - t_inf) * 1000.0)
 
             action = make_robot_action(action_values, features)
+            for k, dv in aim_offset.items():
+                # Applied before smoothing so prev_cmd holds what was actually sent.
+                # For a constant offset the filter output is the same either way; this
+                # only matters if a future offset is ever made time-varying.
+                if k in action:
+                    action[k] = float(action[k]) + dv
             if args.smooth < 1.0:
                 if prev_cmd is None:
                     # Seed from where the arm actually is. Smoothing against nothing
@@ -344,6 +394,14 @@ def main() -> int:
                     action[k] = args.smooth * float(action[k]) + (1.0 - args.smooth) * prev_cmd[k]
                 prev_cmd = {k: float(v) for k, v in action.items()}
             robot.send_action(action)
+            if traj_w is not None:
+                # After send_action, so this records the command as issued -- offset
+                # and smoothing included. Clamping happens below this layer, in
+                # _unnormalize, and is not visible here; compare cmd against the next
+                # step's state to see it.
+                traj_w.writerow([step, round(time.perf_counter() - t_start, 4)]
+                                + [round(float(obs[f"{j}.pos"]), 3) for j in joints]
+                                + [round(float(action[f"{j}.pos"]), 3) for j in joints])
             step += 1
             loop_ms.append((time.perf_counter() - loop_t) * 1000.0)
 
@@ -366,6 +424,9 @@ def main() -> int:
     except KeyboardInterrupt:
         stopped = "operator stop"
     finally:
+        if traj_f is not None:
+            traj_f.close()
+            print(f"  trajectory written to {args.log_trajectory}")
         sys.stdout.write("\r" + " " * 72 + "\r")
         elapsed = time.perf_counter() - t_start
         try:
