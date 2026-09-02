@@ -240,6 +240,12 @@ def main() -> int:
                    help="Save the camera frame the policy saw every 30 steps as JPEG, "
                         "named by step. The trajectory CSV says where the arm closed; "
                         "only the frame says where the bottle was when it did.")
+    r.add_argument("--n-action-steps-moving", type=int, default=None, metavar="N",
+                   help="Once shoulder_lift has left the start pose (> -90), shrink the "
+                        "execution horizon to N steps and re-plan. The long horizon is only "
+                        "needed to get through the start-pose dwell; during the reach it "
+                        "commits the arm to a 3.3 s open-loop plan that a wrist camera "
+                        "cannot get right in one shot (v7 trial 1 closed below the bottle).")
     r.add_argument("--temporal-ensemble", type=float, default=None, metavar="COEFF",
                    help="Infer every step and execute the exponentially weighted average of "
                         "every past chunk's prediction for the current step (ACT's own "
@@ -408,6 +414,7 @@ def main() -> int:
     stopped = ""
     peak_c = 0
     prev_cmd = None
+    horizon_switched = False
     print(f"\n  running {'%d steps' % args.steps if args.steps else '%.0f s' % args.duration}"
           f" at {args.fps:g} Hz target -- Ctrl-C to stop\n")
     t_start = time.perf_counter()
@@ -421,6 +428,13 @@ def main() -> int:
             loop_t = time.perf_counter()
 
             obs = robot.get_observation()
+            if (args.n_action_steps_moving is not None and not horizon_switched
+                    and float(obs.get("shoulder_lift.pos", -100.0)) > -90.0):
+                policy.config.n_action_steps = args.n_action_steps_moving
+                cfg.n_action_steps = args.n_action_steps_moving
+                policy._action_queue.clear()      # re-plan now, not when the old chunk drains
+                horizon_switched = True
+                print(f"\n  step {step}: arm moving, horizon {args.n_action_steps_moving} steps from here")
             if overlay is not None and "top" in obs:
                 img = np.array(obs["top"], copy=True)
                 img[overlay[0]] = overlay[1]
