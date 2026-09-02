@@ -240,6 +240,13 @@ def main() -> int:
                    help="Save the camera frame the policy saw every 30 steps as JPEG, "
                         "named by step. The trajectory CSV says where the arm closed; "
                         "only the frame says where the bottle was when it did.")
+    r.add_argument("--temporal-ensemble", type=float, default=None, metavar="COEFF",
+                   help="Infer every step and execute the exponentially weighted average of "
+                        "every past chunk's prediction for the current step (ACT's own "
+                        "temporal ensembling; the paper used 0.01). Replaces the "
+                        "n_action_steps queue, so visual correction happens every step and "
+                        "the start-pose dwell cannot lock the arm: chunks predicted earlier "
+                        "already call for motion now.")
     r.add_argument("--overlay", type=Path, default=None, metavar="IMAGE",
                    help="Paste a fixed region of this 640x480 training frame onto every "
                         "live frame before inference. Kinesthetic demonstrations leave the "
@@ -277,6 +284,15 @@ def main() -> int:
         print(f"  n_action_steps overridden to {args.n_action_steps} "
               f"(chunk_size {cfg.chunk_size}) -- re-infers every "
               f"{args.n_action_steps / args.fps:.2f} s")
+    if args.temporal_ensemble is not None:
+        from lerobot.policies.act.modeling_act import ACTTemporalEnsembler
+        policy.config.temporal_ensemble_coeff = args.temporal_ensemble
+        cfg.temporal_ensemble_coeff = args.temporal_ensemble
+        policy.temporal_ensembler = ACTTemporalEnsembler(args.temporal_ensemble, cfg.chunk_size)
+        policy.config.n_action_steps = 1
+        cfg.n_action_steps = 1
+        print(f"  temporal ensembling coeff {args.temporal_ensemble:g}: inferring every step, "
+              "n_action_steps forced to 1   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
     device = get_safe_torch_device(cfg.device)
     chunk = getattr(cfg, "chunk_size", "?")
     n_act = getattr(cfg, "n_action_steps", "?")
