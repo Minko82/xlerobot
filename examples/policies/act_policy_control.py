@@ -408,7 +408,17 @@ def main() -> int:
             if step % TEMP_CHECK_EVERY == 0:
                 try:
                     temps = robot.bus.sync_read("Present_Temperature", normalize=False)
-                    peak_c = max(peak_c, max(int(v) for v in temps.values()))
+                    hot = max(int(v) for v in temps.values())
+                    if hot >= SERVO_TEMP_CEILING_C:
+                        # The bus occasionally returns a corrupted status packet. One
+                        # such read said 83 C on a 35 C arm and ended a trial; a servo
+                        # cannot gain 30 C in a second, so a ceiling reading only
+                        # counts when an immediate re-read agrees with it.
+                        again = robot.bus.sync_read("Present_Temperature", normalize=False)
+                        hot2 = max(int(v) for v in again.values())
+                        if abs(hot2 - hot) > 5:
+                            hot = min(hot, hot2)
+                    peak_c = max(peak_c, hot)
                     if peak_c >= SERVO_TEMP_CEILING_C:
                         stopped = f"thermal ceiling: {peak_c} C"
                         break
