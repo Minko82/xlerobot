@@ -291,8 +291,23 @@ def main() -> int:
         policy.temporal_ensembler = ACTTemporalEnsembler(args.temporal_ensemble, cfg.chunk_size)
         policy.config.n_action_steps = 1
         cfg.n_action_steps = 1
+        # Averaging a step function smears it. The gripper command is one: open for
+        # the whole approach, then closed. Ensembled across 100 chunks it became a
+        # slow ramp that started closing at 3 s mid-reach (v7 trial 2); the policy
+        # saw a closing gripper, read the grasp as done and retracted. So the arm
+        # joints are ensembled and the gripper comes from the newest chunk alone.
+        _ens = policy.temporal_ensembler
+        _orig_update = _ens.update
+        _gripper_idx = 5   # action order: pan, lift, elbow, wrist_flex, wrist_roll, gripper
+
+        def _update_arm_only(actions):
+            out = _orig_update(actions)
+            out[:, _gripper_idx] = actions[:, 0, _gripper_idx]
+            return out
+        _ens.update = _update_arm_only
         print(f"  temporal ensembling coeff {args.temporal_ensemble:g}: inferring every step, "
-              "n_action_steps forced to 1   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
+              "n_action_steps forced to 1, gripper taken from the newest chunk"
+              "   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
     device = get_safe_torch_device(cfg.device)
     chunk = getattr(cfg, "chunk_size", "?")
     n_act = getattr(cfg, "n_action_steps", "?")
