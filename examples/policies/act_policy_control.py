@@ -616,6 +616,11 @@ def main() -> int:
         print(f"  stopped early: {stopped}")
     print(f"  inference   {med(infer_ms):6.1f} ms median   "
           f"({min(infer_ms, default=0):.0f}-{max(infer_ms, default=0):.0f} ms)")
+    if infer_ms:
+        # The median is dominated by queue pops; the slow tail is the real chunk inferences.
+        n_chunk = max(1, len(infer_ms) // max(1, int(cfg.n_action_steps)))
+        tail = sorted(infer_ms)[-n_chunk:]
+        print(f"  chunk inf.  {med(tail):6.1f} ms median of the {n_chunk} slowest   (max {max(tail):.0f} ms)")
     print(f"  loop        {med(loop_ms):6.1f} ms median   "
           f"({min(loop_ms, default=0):.0f}-{max(loop_ms, default=0):.0f} ms)")
     print(f"  peak joint  {peak_c} C")
