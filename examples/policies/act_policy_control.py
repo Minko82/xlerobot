@@ -240,6 +240,14 @@ def main() -> int:
                    help="Save the camera frame the policy saw every 30 steps as JPEG, "
                         "named by step. The trajectory CSV says where the arm closed; "
                         "only the frame says where the bottle was when it did.")
+    r.add_argument("--overlay", type=Path, default=None, metavar="IMAGE",
+                   help="Paste a fixed region of this 640x480 training frame onto every "
+                        "live frame before inference. Kinesthetic demonstrations leave the "
+                        "operator's hand on the wrist, in the wrist camera's view; the "
+                        "policy learned to read it, and without it closes early and short.")
+    r.add_argument("--overlay-region", default="200,480,0,260", metavar="Y0,Y1,X0,X1",
+                   help="Pixel box of --overlay to paste. Default covers the gripper body "
+                        "and hand at the bottom-left, leaving the moving jaw visible.")
     r.add_argument("--no-envelope", action="store_true",
                    help="Skip the Table III clamp. Only for the C1 unsized experiment.")
     args = p.parse_args()
@@ -343,6 +351,16 @@ def main() -> int:
         frames_dir = args.log_frames
         print(f"  logging a frame every 30 steps to {frames_dir}")
 
+    overlay = None
+    if args.overlay:
+        import cv2
+        import numpy as np
+        y0, y1, x0, x1 = (int(v) for v in args.overlay_region.split(","))
+        src = cv2.cvtColor(cv2.imread(str(args.overlay)), cv2.COLOR_BGR2RGB)
+        overlay = ((slice(y0, y1), slice(x0, x1)), src[y0:y1, x0:x1].copy())
+        print(f"  overlay: {args.overlay} region y{y0}:{y1} x{x0}:{x1}"
+              "   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
+
     traj_f = traj_w = None
     if args.log_trajectory:
         import csv
@@ -372,6 +390,10 @@ def main() -> int:
             loop_t = time.perf_counter()
 
             obs = robot.get_observation()
+            if overlay is not None and "top" in obs:
+                img = np.array(obs["top"], copy=True)
+                img[overlay[0]] = overlay[1]
+                obs["top"] = img
             if frames_dir is not None and step % 30 == 0 and "top" in obs:
                 cv2.imwrite(str(frames_dir / f"{step:05d}.jpg"),
                             cv2.cvtColor(np.asarray(obs["top"]), cv2.COLOR_RGB2BGR))
