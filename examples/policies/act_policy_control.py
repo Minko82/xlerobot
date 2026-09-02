@@ -236,6 +236,10 @@ def main() -> int:
                         "The only way to tell a policy that never commanded a motion "
                         "from one whose command was clamped, filtered or bled away on "
                         "exit -- the arm's final pose cannot distinguish those.")
+    r.add_argument("--log-frames", type=Path, default=None, metavar="DIR",
+                   help="Save the camera frame the policy saw every 30 steps as JPEG, "
+                        "named by step. The trajectory CSV says where the arm closed; "
+                        "only the frame says where the bottle was when it did.")
     r.add_argument("--no-envelope", action="store_true",
                    help="Skip the Table III clamp. Only for the C1 unsized experiment.")
     args = p.parse_args()
@@ -331,6 +335,14 @@ def main() -> int:
     post.reset()
     policy.reset()
 
+    frames_dir = None
+    if args.log_frames:
+        import cv2
+        import numpy as np
+        args.log_frames.mkdir(parents=True, exist_ok=True)
+        frames_dir = args.log_frames
+        print(f"  logging a frame every 30 steps to {frames_dir}")
+
     traj_f = traj_w = None
     if args.log_trajectory:
         import csv
@@ -360,6 +372,9 @@ def main() -> int:
             loop_t = time.perf_counter()
 
             obs = robot.get_observation()
+            if frames_dir is not None and step % 30 == 0 and "top" in obs:
+                cv2.imwrite(str(frames_dir / f"{step:05d}.jpg"),
+                            cv2.cvtColor(np.asarray(obs["top"]), cv2.COLOR_RGB2BGR))
             obs_frame = build_dataset_frame(features, obs, prefix=OBS_STR)
 
             t_inf = time.perf_counter()
