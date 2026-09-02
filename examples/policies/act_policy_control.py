@@ -261,6 +261,24 @@ def main() -> int:
     r.add_argument("--overlay-region", default="200,480,0,260", metavar="Y0,Y1,X0,X1",
                    help="Pixel box of --overlay to paste. Default covers the gripper body "
                         "and hand at the bottom-left, leaving the moving jaw visible.")
+    r.add_argument("--freeze-frame", action="store_true",
+                   help="Feed the policy the frame captured at step 0 for the whole run (after "
+                        "--overlay and --color-match). For policies trained on frozen-frame "
+                        "datasets (freeze_dataset_videos.py): the image then carries only where the "
+                        "bottle is, and nothing about how the arm looks mid-reach. --log-frames "
+                        "still saves what the camera really saw.")
+    r.add_argument("--color-match", nargs="?", const="71.9,94.6,105.9:12.3,13.7,14.0", default=None,
+                   metavar="R,G,B:R,G,B",
+                   help="Per-channel affine correction so the shelf patch (y 250:450, x 300:520) "
+                        "matches a target mean:std. Default target = glassbottle_pick_v7_masked "
+                        "start frames. A daylight frame biases every reach plan short; this "
+                        "recovered the early-reach plans offline (2 Sept) but is no substitute for "
+                        "the training lighting. RECORD IT ALONGSIDE ANY SUCCESS RATE.")
+    r.add_argument("--log-plans", type=Path, default=None, metavar="CSV",
+                   help="Write one row per inference: step, joint state, the planned close step, "
+                        "the planned pose at the close (or chunk end), and the chunk's peak "
+                        "shoulder_lift. The trajectory CSV shows what was executed; this shows what "
+                        "each observation made the policy intend.")
     r.add_argument("--no-envelope", action="store_true",
                    help="Skip the Table III clamp. Only for the C1 unsized experiment.")
     args = p.parse_args()
@@ -380,6 +398,7 @@ def main() -> int:
     post.reset()
     policy.reset()
 
+    import numpy as np  # noqa: F811  (overlay/colour-match/freeze/plan logging all use it)
     frames_dir = None
     if args.log_frames:
         import cv2
@@ -397,6 +416,36 @@ def main() -> int:
         overlay = ((slice(y0, y1), slice(x0, x1)), src[y0:y1, x0:x1].copy())
         print(f"  overlay: {args.overlay} region y{y0}:{y1} x{x0}:{x1}"
               "   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
+
+    cmatch = None
+    if args.color_match:
+        import numpy as np
+        m_s, s_s = args.color_match.split(":")
+        cmatch = (np.array([float(v) for v in m_s.split(",")], np.float32),
+                  np.array([float(v) for v in s_s.split(",")], np.float32))
+        print(f"  colour match: shelf patch -> mean {cmatch[0]} std {cmatch[1]}"
+              "   -- RECORD THIS ALONGSIDE ANY SUCCESS RATE")
+    if args.freeze_frame:
+        print("  freeze-frame: the policy sees the step-0 frame for the whole run")
+
+    plans_f = plans_w = None
+    if args.log_plans:
+        import csv as _csv
+        import torch as _torch
+        _names = [k[:-4] for k in features["action"]["names"]]
+        plans_f = open(args.log_plans, "w", newline="")
+        plans_w = _csv.writer(plans_f)
+        plans_w.writerow(["step", "t_s"] + [f"state.{j}" for j in _names] + ["close_step"]
+                         + [f"close.{j}" for j in _names] + [f"end.{j}" for j in _names] + ["max_lift"])
+        _last = {"chunk": None}
+        _orig_chunk = policy.predict_action_chunk
+
+        def _capturing_chunk(batch):
+            out = _orig_chunk(batch)
+            _last["chunk"] = out
+            return out
+        policy.predict_action_chunk = _capturing_chunk
+        print(f"  logging every plan to {args.log_plans}")
 
     traj_f = traj_w = None
     if args.log_trajectory:
@@ -442,6 +491,22 @@ def main() -> int:
             if frames_dir is not None and step % 30 == 0 and "top" in obs:
                 cv2.imwrite(str(frames_dir / f"{step:05d}.jpg"),
                             cv2.cvtColor(np.asarray(obs["top"]), cv2.COLOR_RGB2BGR))
+            if cmatch is not None and "top" in obs:
+                img = np.asarray(obs["top"]).astype(np.float32)
+                patch = img[250:450, 300:520].reshape(-1, 3)
+                mu, sd = patch.mean(0), np.maximum(patch.std(0), 1.0)
+                img = (img - mu) / sd * cmatch[1] + cmatch[0]
+                img = np.clip(img, 0, 255).astype(np.uint8)
+                if overlay is not None:
+                    img[overlay[0]] = overlay[1]
+                obs["top"] = img
+            if args.freeze_frame and "top" in obs:
+                if step == 0:
+                    frozen = np.array(obs["top"], copy=True)
+                    if frames_dir is not None:
+                        cv2.imwrite(str(frames_dir / "frozen.png"),
+                                    cv2.cvtColor(frozen, cv2.COLOR_RGB2BGR))
+                obs["top"] = frozen
             obs_frame = build_dataset_frame(features, obs, prefix=OBS_STR)
 
             t_inf = time.perf_counter()
@@ -452,6 +517,18 @@ def main() -> int:
                 robot_type=getattr(robot, "robot_type", robot.name),
             )
             infer_ms.append((time.perf_counter() - t_inf) * 1000.0)
+            if plans_w is not None and _last["chunk"] is not None:
+                ch = post(_last["chunk"][0]).detach().cpu().numpy().reshape(-1, len(_names))
+                _last["chunk"] = None
+                gi = _names.index("gripper")
+                ks = np.where(ch[:, gi] < 50)[0]
+                k = int(ks[0]) if len(ks) else -1
+                pose = ch[k] if k >= 0 else ch[-1]
+                plans_w.writerow([step, round(time.perf_counter() - t_start, 4)]
+                                 + [round(float(obs[f"{j}.pos"]), 3) for j in _names] + [k]
+                                 + [round(float(v), 3) for v in pose] + [round(float(v), 3) for v in ch[-1]]
+                                 + [round(float(ch[:, _names.index("shoulder_lift")].max()), 3)])
+                plans_f.flush()
 
             action = make_robot_action(action_values, features)
             for k, dv in aim_offset.items():
@@ -519,6 +596,9 @@ def main() -> int:
         if traj_f is not None:
             traj_f.close()
             print(f"  trajectory written to {args.log_trajectory}")
+        if plans_f is not None:
+            plans_f.close()
+            print(f"  plans written to {args.log_plans}")
         sys.stdout.write("\r" + " " * 72 + "\r")
         elapsed = time.perf_counter() - t_start
         try:
