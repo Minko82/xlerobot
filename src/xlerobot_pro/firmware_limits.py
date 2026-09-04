@@ -13,6 +13,33 @@ brown out the Jetson.
  time and by the vision demos before any motion.
 ═══════════════════════════════════════════════════════════════════════
 
+BUS MAXIMA (Table III of the paper). Each bus is permitted at most 98 % of its
+fuse. The caps below are set so that Eq. (2) of the paper -- the loaded joints at
+the cap, the rest at no-load current -- stays under that maximum:
+
+    Bus Group            tau   accel   Max draw   Eq. (2) worst case   Measured
+    Bus A (wheels/neck)  650   20      9.84 A     9.13 A (5 x 1.83 A)  --
+    Bus B (arms)         450   40      4.90 A     4.44 A (2 x 1.32 + 10 x 0.18)   1.41 A per arm, <= 2.8 A both
+    Jetson Orin          n/a   n/a    <2.10 A     --                   --
+
+Bus B was measured on 2 Sep 2026 with an inline ammeter (FNIRSI 2C53T, MAX hold)
+on one arm's supply lead during five worst-case simultaneous six-joint moves at
+this envelope: 1.41 A peak, 0.15 A idle (xlerobot-pro-data, A1/bus_b_peak_left_run4).
+Bus A has not been measured. The residual between the Eq. (2) worst case and the
+maximum (0.71 A on Bus A, 0.46 A on Bus B) is the inrush allowance. Raising torque
+or acceleration on either bus spends that allowance; the limits are the platform's
+envelope, not defaults awaiting tuning.
+
+Consequences worth knowing before trying to design around them:
+
+- Base acceleration is capped at 0.152 m/s^2. WHEEL_NECK_ACCELERATION = 20 units
+  x 8.7 deg/s^2 x 0.05 m wheel radius = 0.152 m/s^2, confirmed by measurement
+  (0.151 and 0.136 m/s^2 realized when commanding 0.25 and 0.5). Commanding more
+  does not produce more.
+- Under a 366 g payload, right_shoulder_lift realizes ~1 % of a commanded slew
+  amplitude at tau=450; right_elbow_flex reaches ~29 %. Choose the joint rather
+  than raising the limit.
+
 Register semantics (Feetech STS3215 firmware):
 
 - ``Torque_Limit`` — integer 0-1000, fraction of stall torque in 0.1 %
@@ -55,34 +82,17 @@ WHEEL_MAX_RAW_SPEED = 3000
 #: 5 A Bus B fuse.
 ARM_TORQUE_LIMIT = 450
 
-#: Elevated torque limit for SUPERVISED dynamic arm tests (B1 slew) only.
-#: NOT a system-wide maximum -- ``ARM_TORQUE_LIMIT`` above remains the
-#: platform default and must not be raised to this value.
+#: RETIRED — do not use. Kept only so existing imports fail loudly rather than
+#: silently reverting to the default.
 #:
-#: Why a separate constant, and why this is inside the fuse budget:
-#:
-#: ``ARM_TORQUE_LIMIT = 450`` is sized so that a DUAL-ARM STALL -- every
-#: arm joint saturating at once -- stays inside the 5 A Bus B fuse. A
-#: slew test is a different case: one joint (shoulder_lift, working
-#: against gravity plus payload) saturates while the rest hold station.
-#:
-#: Measured during a 366 g slew: the saturated lift joint drew 108
-#: current counts (~0.70 A at the STS3215's ~6.5 mA/count) while the ten
-#: holding joints drew ~5 counts each (~0.03 A). Total ~1.0 A of the 5 A
-#: budget. Scaling the one saturating joint to 650 takes it to ~1.0 A,
-#: for ~1.3 A total -- still roughly a quarter of the fuse rating.
-#:
-#: Constraints on use:
-#:   - apply to the swept joints only, never bus-wide
-#:   - supervised, short runs only; a stalled joint at 650 heats fast
-#:   - restore ``ARM_TORQUE_LIMIT`` afterwards (the slew script does this
-#:     in its gentle-release ``finally``)
-#:   - do NOT use for A2 thermal work; those runs are all at 450 and
-#:     changing it breaks comparability across the whole load sweep
-#:
-#: 650 matches the Bus A wheel/neck limit (~1.91 N*m), so it is a value
-#: the platform already runs elsewhere rather than a new extreme.
-SLEW_TORQUE_LIMIT = 650
+#: This was added to let shoulder_lift follow a slew trajectory under payload,
+#: justified against an estimated ~1.3 A slew-case draw. Bus B's permitted maximum
+#: is 4.90 A against a 5 A fuse and Eq. (2) puts the tau=450 worst case at 4.44 A
+#: (Table III); raising two joints to 650 adds roughly 0.6 A to that worst case,
+#: which spends the whole inrush allowance. B1 arm-slew
+#: runs recorded with boosted=true in their run_info.json were collected outside the
+#: documented envelope and should be reported as such, or repeated at tau=450.
+SLEW_TORQUE_LIMIT = None
 
 #: Maximum acceleration for the arm motors ("Soft" ramp), chosen to
 #: minimize inrush spikes during manipulation.
